@@ -131,7 +131,8 @@ class Converter:
 				}
 			),
 
-			loss=self.__perceptual_loss_multiscale
+			loss=self.__l1_and_l2_loss
+			# loss=self.__perceptual_loss_multiscale
 		)
 
 		lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
@@ -186,6 +187,10 @@ class Converter:
 			callbacks=[reduce_lr, early_stopping, checkpoint, tensorboard],
 			verbose=1
 		)
+
+	def __l1_and_l2_loss(self, y_true, y_pred):
+		alpha = 0.5
+		return (1-alpha) * tf.keras.losses.MeanAbsoluteError(y_true, y_pred).float() + alpha * tf.keras.losses.MeanSquaredError(y_true, y_pred).float()
 
 	def __perceptual_loss(self, y_true, y_pred):
 		perceptual_codes_pred = self.vgg(y_pred)
@@ -280,7 +285,7 @@ class Converter:
 		return model
 
 	def __build_vgg(self):
-		vgg = vgg16.VGG16(include_top=False, input_shape=(self.config.img_shape[0], self.config.img_shape[1], 1))
+		vgg = vgg16.VGG16(include_top=False, input_shape=(self.config.img_shape[0], self.config.img_shape[1], 3))
 
 		layer_outputs = [vgg.layers[layer_id].output for layer_id in self.config.perceptual_loss_layers]
 		feature_extractor = Model(inputs=vgg.inputs, outputs=layer_outputs)
@@ -288,7 +293,7 @@ class Converter:
 		img = Input(shape=self.config.img_shape)
 
 		if self.config.img_shape[-1] == 1:
-			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 1)))(img)
+			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
 		else:
 			x = img
 
