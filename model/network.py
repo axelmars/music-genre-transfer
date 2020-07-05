@@ -204,8 +204,8 @@ class Converter:
 		loss = 0
 
 		for scale in self.config.perceptual_loss_scales:
-			y_true_resized = tf.image.resize_images(y_true, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
-			y_pred_resized = tf.image.resize_images(y_pred, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
+			y_true_resized = tf.image.resize(y_true, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
+			y_pred_resized = tf.image.resize(y_pred, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
 
 			loss += self.__perceptual_loss(y_true_resized, y_pred_resized)
 
