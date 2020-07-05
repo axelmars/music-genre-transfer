@@ -13,7 +13,7 @@ import pickle
 from keras.datasets import mnist
 from scipy.ndimage.filters import gaussian_filter
 
-from facedetection.face_detection import FaceDetector
+# from facedetection.face_detection import FaceDetector
 
 from pydub import AudioSegment
 from scipy.io import wavfile
