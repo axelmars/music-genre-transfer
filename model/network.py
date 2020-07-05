@@ -190,7 +190,7 @@ class Converter:
 
 	def __l1_and_l2_loss(self, y_true, y_pred):
 		alpha = 0.5
-		return (1-alpha) * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred).float() + alpha * tf.keras.losses.MeanSquaredError()(y_true, y_pred).float()
+		return (1-alpha) * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + alpha * tf.keras.losses.MeanSquaredError()(y_true, y_pred)
 
 	def __perceptual_loss(self, y_true, y_pred):
 		perceptual_codes_pred = self.vgg(y_pred)
