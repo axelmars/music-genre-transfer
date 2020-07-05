@@ -77,7 +77,8 @@ def train(args):
 
 	data = np.load(assets.get_preprocess_file_path(args.data_name))
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
-	identities = identities.astype(np.float32)
+	# identities = identities.astype(np.float32)
+	print('!!!!!identities type: ', identities.dtype)
 	imgs = imgs.astype(np.float32) / 255.0
 
 	converter = Converter.build(
