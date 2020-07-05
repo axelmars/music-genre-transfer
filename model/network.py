@@ -127,7 +127,7 @@ class Converter:
 			optimizer=LRMultiplier(
 				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 				multipliers={
-					'identity-embedding': 10
+					'identity-embedding': 10.0
 				}
 			),
 
