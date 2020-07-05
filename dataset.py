@@ -387,26 +387,24 @@ class SimpleFMA(DataSet):
 		# self.__imgs_dir = os.path.join(self._base_dir, 'Img', 'img_align_celeba_png.7z', 'img_align_celeba_png')
 		# self.__identity_map_path = os.path.join(self._base_dir, 'Anno', 'identity_CelebA.txt')
 
-	# def __list_imgs(self):
-	# 	with open(self.__identity_map_path, 'r') as fd:
-	# 		lines = fd.read().splitlines()
-	#
-	# 	img_paths = []
-	# 	identity_ids = []
-	#
-	# 	for line in lines:
-	# 		img_name, identity_id = line.split(' ')
-	# 		img_path = os.path.join(self.__imgs_dir, os.path.splitext(img_name)[0] + '.png')
-	#
-	# 		img_paths.append(img_path)
-	# 		identity_ids.append(identity_id)
-	#
-	# 	return img_paths, identity_ids
+	def __list_imgs(self):
+
+		with open(os.path.join(self._base_dir, 'bin/spec_paths.pkl'), 'rb') as fd:
+			spec_paths = pickle.load(fd)
+
+		img_paths = []
+
+		for spec_path in spec_paths:
+			img_name = spec_path[-10:]
+			img_path = os.path.join(self._base_dir, 'datasets', 'fma_small_specs_img', img_name)
+
+			img_paths.append(img_path)
+
+		return img_paths
 
 	def read_images(self):
 
-		with open(os.path.join(self._base_dir, 'bin/spec_paths.pkl'), 'rb') as f1:
-			img_paths = pickle.load(f1)
+		img_paths = self.__list_imgs()
 
 		with open(os.path.join(self._base_dir, 'bin/genre_ids.pkl'), 'rb') as f2:
 			genre_ids = pickle.load(f2)
