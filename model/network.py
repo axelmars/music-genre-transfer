@@ -221,7 +221,7 @@ class Converter:
 		identity = Input(shape=(1, ), dtype='int64')
 
 		identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim, name='identity-embedding')(identity)
-		identity_embedding = Reshape(target_shape=(identity_dim, ), dtype='float32')(identity_embedding)
+		identity_embedding = Reshape(target_shape=(identity_dim, ), dtype='int64')(identity_embedding)
 
 		model = Model(inputs=identity, outputs=identity_embedding)
 
