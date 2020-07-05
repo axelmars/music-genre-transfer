@@ -280,7 +280,7 @@ class Converter:
 		return model
 
 	def __build_vgg(self):
-		vgg = vgg16.VGG16(include_top=False, input_shape=(self.config.img_shape[0], self.config.img_shape[1], 3))
+		vgg = vgg16.VGG16(include_top=False, input_shape=(self.config.img_shape[0], self.config.img_shape[1], 1))
 
 		layer_outputs = [vgg.layers[layer_id].output for layer_id in self.config.perceptual_loss_layers]
 		feature_extractor = Model(inputs=vgg.inputs, outputs=layer_outputs)
@@ -288,7 +288,7 @@ class Converter:
 		img = Input(shape=self.config.img_shape)
 
 		if self.config.img_shape[-1] == 1:
-			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
+			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 1)))(img)
 		else:
 			x = img
 
