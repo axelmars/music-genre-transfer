@@ -218,7 +218,7 @@ class Converter:
 
 	@classmethod
 	def __build_identity_embedding(cls, n_identities, identity_dim):
-		identity = Input(shape=(1, ))
+		identity = Input(shape=(1, ), dtype='float32')
 
 		identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim, name='identity-embedding')(identity)
 		identity_embedding = Reshape(target_shape=(identity_dim, ))(identity_embedding)
