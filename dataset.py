@@ -15,17 +15,8 @@ from scipy.ndimage.filters import gaussian_filter
 
 # from facedetection.face_detection import FaceDetector
 
-from pydub import AudioSegment
-from scipy.io import wavfile
-import scipy.signal as signal
-import matplotlib.pyplot as plt
-import subprocess
-import ast
-from sklearn.preprocessing import MultiLabelBinarizer
 import os
-from imageio import imread
-import librosa.display
-import librosa.feature
+
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
