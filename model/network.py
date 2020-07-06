@@ -515,10 +515,10 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			for w in self.optimizer.weights:
 				try:
 					if w not in self.weights:
-						self.weights.append(w)
+						self.weights.append(K.cast(w, K.floatx()))
 				except InvalidArgumentError:
 					if K.cast(w, K.floatx()) not in self.weights:
-						self.weights.append(w)
+						self.weights.append(K.cast(w, K.floatx()))
 		setattr(self, self.lr_attr, origin_lr)
 
 		return self.updates
