@@ -5,16 +5,16 @@ import imageio
 import numpy as np
 import tensorflow as tf
 
-from keras import backend as K
-from keras import optimizers, losses, regularizers
-from keras.layers import Conv2D, Dense, UpSampling2D, LeakyReLU, Activation
-from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise
-from keras.models import Model, load_model
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
-from keras.applications import vgg16
+from tensorflow.keras import backend as K
+from tensorflow.keras import optimizers, losses, regularizers
+from tensorflow.keras.layers import Conv2D, Dense, UpSampling2D, LeakyReLU, Activation
+from tensorflow.keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
+from tensorflow.keras.applications import vgg16
 from keras_lr_multiplier import LRMultiplier
 from keras_lr_multiplier.backend import optimizers
-from tensorflow.python.framework.errors_impl import InvalidArgumentError
+# from tensorflow.python.framework.errors_impl import InvalidArgumentError
 
 from model.evaluation import EvaluationCallback, TrainEncodersEvaluationCallback
 
