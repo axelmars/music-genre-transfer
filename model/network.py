@@ -5,15 +5,15 @@ import imageio
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.keras import backend as K
-from tensorflow.keras import optimizers, losses, regularizers
-from tensorflow.keras.layers import Conv2D, Dense, UpSampling2D, LeakyReLU, Activation
-from tensorflow.keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
-from tensorflow.keras.applications import vgg16
+from keras import backend as K
+from keras import optimizers, losses, regularizers
+from keras.layers import Conv2D, Dense, UpSampling2D, LeakyReLU, Activation
+from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise
+from keras.models import Model, load_model
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
+from keras.applications import vgg16
 from keras_lr_multiplier import LRMultiplier
-from keras_lr_multiplier.backend import optimizers
+# from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
 
 from model.evaluation import EvaluationCallback, TrainEncodersEvaluationCallback
@@ -126,7 +126,7 @@ class Converter:
 		model = Model(inputs=[img, identity], outputs=generated_img)
 
 		model.compile(
-			optimizer=LRMultiplier(
+			optimizer=LRMultiplierWrapper(
 				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 				multipliers={
 					'identity-embedding': 10.0
@@ -518,8 +518,8 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			for w in self.optimizer.weights:
 				# print(w, self.weights[1:])
 				# if w not in self.weights[1:]:
-				# names = [x.name for x in self.weights]
-				if w not in self.weights:
+				names = [x.name for x in self.weights]
+				if w.name not in names:
 					self.weights.append(w)
 				# try:
 				# 	if w not in self.weights:

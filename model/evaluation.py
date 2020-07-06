@@ -45,10 +45,12 @@ class EvaluationCallback(TensorBoard):
 			output.append(np.concatenate(converted_imgs, axis=1))
 
 		merged_img = np.concatenate(output, axis=0)
-
-		summary = tf.Summary(value=[tf.Summary.Value(tag='sample', image=make_image(merged_img))])
-		self.writer.add_summary(summary, global_step=epoch)
-		self.writer.flush()
+		with self.writer.as_default():
+			tf.summary.image(name='sample', data=make_image(merged_img))
+			self.writer.flush()
+		# summary = tf.Summary(value=[tf.Summary.Value(tag='sample', image=make_image(merged_img))])
+		# self.writer.add_summary(summary, global_step=epoch)
+		# self.writer.flush()
 
 
 class TrainEncodersEvaluationCallback(TensorBoard):
@@ -107,4 +109,4 @@ def make_image(tensor):
 		image.save(out, format='PNG')
 		image_string = out.getvalue()
 
-	return tf.Summary.Image(height=height, width=width, colorspace=channels, encoded_image_string=image_string)
+	return tf.image.decode_png(contents=image_string, channels=channels)
