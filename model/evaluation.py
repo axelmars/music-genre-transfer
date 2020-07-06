@@ -22,6 +22,7 @@ class EvaluationCallback(TensorBoard):
 		self.__generator = generator
 
 		self.__n_samples_per_evaluation = 5
+		self.writer = tf.summary.create_file_writer(tensorboard_dir)
 
 	def on_epoch_end(self, epoch, logs={}):
 		super().on_epoch_end(epoch, logs)
