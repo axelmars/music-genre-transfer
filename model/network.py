@@ -512,13 +512,16 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			with K.name_scope('Group_{}'.format(i)):
 				self.updates += self.optimizer.get_updates(loss, params)
 			print(self.multipliers, i, self.optimizer.weights)
+			self.optimizer.set_weights(K.cast(self.optimizer.weights, K.floatx()))
 			for w in self.optimizer.weights:
-				try:
-					if w not in self.weights:
-						self.weights.append(K.cast(w, K.floatx()))
-				except InvalidArgumentError:
-					if K.cast(w, K.floatx()) not in self.weights:
-						self.weights.append(K.cast(w, K.floatx()))
+				if w not in self.weights:
+					self.weights.append(w)
+				# try:
+				# 	if w not in self.weights:
+				# 		self.weights.append(K.cast(w, K.floatx()))
+				# except InvalidArgumentError:
+				# 	if K.cast(w, K.floatx()) not in self.weights:
+				# 		self.weights.append(K.cast(w, K.floatx()))
 		setattr(self, self.lr_attr, origin_lr)
 
 		return self.updates
