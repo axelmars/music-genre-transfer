@@ -14,7 +14,7 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
 from keras_lr_multiplier import LRMultiplier
 from keras_lr_multiplier.backend import optimizers
-
+from tensorflow.python.framework.errors_impl import InvalidArgumentError
 
 from model.evaluation import EvaluationCallback, TrainEncodersEvaluationCallback
 
@@ -512,9 +512,13 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			with K.name_scope('Group_{}'.format(i)):
 				self.updates += self.optimizer.get_updates(loss, params)
 			print(self.multipliers, i, self.optimizer.weights)
-			for w in K.cast(self.optimizer.weights, K.floatx()):
-				if w not in self.weights:
-					self.weights.append(w)
+			for w in self.optimizer.weights:
+				try:
+					if w not in self.weights:
+						self.weights.append(w)
+				except InvalidArgumentError:
+					if K.cast(w, K.floatx()) not in self.weights:
+						self.weights.append(w)
 		setattr(self, self.lr_attr, origin_lr)
 
 		return self.updates
