@@ -515,6 +515,7 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			# self.optimizer.set_weights(K.cast(self.optimizer.weights, K.floatx()))
 			self.weights.append(self.optimizer.weights[0])
 			for w in self.optimizer.weights[1:]:
+				print(w, self.weights[1:])
 				if w not in self.weights[1:]:
 					self.weights.append(w)
 				# try:
