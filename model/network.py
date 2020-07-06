@@ -125,7 +125,7 @@ class Converter:
 
 		model.compile(
 			optimizer=LRMultiplier(
-				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
+				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999, dtype=np.float32),
 				multipliers={
 					'identity-embedding': 10.0
 				}
@@ -220,10 +220,10 @@ class Converter:
 	def __build_identity_embedding(cls, n_identities, identity_dim):
 		identity = Input(shape=(1, ))
 
-		identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim, name='identity-embedding')(identity)
+		identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim, name='identity-embedding', dtype='int64')(identity)
 		identity_embedding = Reshape(target_shape=(identity_dim, ))(identity_embedding)
 
-		model = Model(inputs=identity, outputs=identity_embedding, name='identity-embedding')
+		model = Model(inputs=identity, outputs=identity_embedding)
 
 		print('identity embedding:')
 		model.summary()
