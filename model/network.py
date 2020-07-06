@@ -126,7 +126,7 @@ class Converter:
 		model = Model(inputs=[img, identity], outputs=generated_img)
 
 		model.compile(
-			optimizer=LRMultiplierWrapper(
+			optimizer=LRMultiplier(
 				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 				multipliers={
 					'identity-embedding': 10.0
