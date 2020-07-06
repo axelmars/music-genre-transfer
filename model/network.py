@@ -511,7 +511,8 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			setattr(self, self.lr_attr, lr)
 			with K.name_scope('Group_{}'.format(i)):
 				self.updates += self.optimizer.get_updates(loss, params)
-			# print(self.multipliers, i, self.optimizer.weights)
+			print(self.multipliers, i, self.optimizer.weights)
+			print('num weights in optimizer: ', len(self.optimizer.weights))
 			# self.optimizer.set_weights(K.cast(self.optimizer.weights, K.floatx()))
 			# self.weights.append(self.optimizer.weights[0])
 			for w in self.optimizer.weights:
