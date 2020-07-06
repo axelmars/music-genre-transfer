@@ -110,4 +110,4 @@ def make_image(tensor):
 		image.save(out, format='PNG')
 		image_string = out.getvalue()
 
-	return tf.image.decode_png(contents=image_string, channels=channels)
+	return tf.expand_dims(tf.image.decode_png(contents=image_string, channels=channels), 0)
