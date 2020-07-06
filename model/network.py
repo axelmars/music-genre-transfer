@@ -513,11 +513,11 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 				self.updates += self.optimizer.get_updates(loss, params)
 			print(self.multipliers, i, self.optimizer.weights)
 			# self.optimizer.set_weights(K.cast(self.optimizer.weights, K.floatx()))
-			self.weights.append(self.optimizer.weights[0])
-			for w in self.optimizer.weights[1:]:
-				print(w, self.weights[1:])
-				if w not in self.weights[1:]:
-					self.weights.append(w)
+			# self.weights.append(self.optimizer.weights[0])
+			for w in self.optimizer.weights:
+				# print(w, self.weights[1:])
+				# if w not in self.weights[1:]:
+				self.weights.append(w)
 				# try:
 				# 	if w not in self.weights:
 				# 		self.weights.append(K.cast(w, K.floatx()))
