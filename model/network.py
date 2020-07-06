@@ -518,8 +518,8 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 			for w in self.optimizer.weights:
 				# print(w, self.weights[1:])
 				# if w not in self.weights[1:]:
-				names = [x.name for x in self.weights]
-				if w.name not in names:
+				# names = [x.name for x in self.weights]
+				if w not in self.weights:
 					self.weights.append(w)
 				# try:
 				# 	if w not in self.weights:
