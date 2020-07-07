@@ -47,7 +47,7 @@ class EvaluationCallback(TensorBoard):
 
 		merged_img = np.concatenate(output, axis=0)
 		with self.writer.as_default():
-			tf.summary.image(name='sample', data=make_image(merged_img), step=0)
+			tf.summary.image(name='sample', data=make_image(merged_img), step=epoch)
 			self.writer.flush()
 		# summary = tf.Summary(value=[tf.Summary.Value(tag='sample', image=make_image(merged_img))])
 		# self.writer.add_summary(summary, global_step=epoch)
