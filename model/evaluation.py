@@ -68,6 +68,7 @@ class TrainEncodersEvaluationCallback(TensorBoard):
 		self.__generator = generator
 
 		self.__n_samples_per_evaluation = 10
+		self.writer = tf.summary.create_file_writer(tensorboard_dir)
 
 	def on_epoch_end(self, epoch, logs={}):
 		if 'loss' in logs:
@@ -96,10 +97,12 @@ class TrainEncodersEvaluationCallback(TensorBoard):
 			output.append(np.concatenate(converted_imgs, axis=1))
 
 		merged_img = np.concatenate(output, axis=0)
-
-		summary = tf.Summary(value=[tf.Summary.Value(tag='sample-with-encoders', image=make_image(merged_img))])
-		self.writer.add_summary(summary, global_step=epoch)
-		self.writer.flush()
+		with self.writer.as_default():
+			tf.summary.image(name='sample-with-encoders', data=make_image(merged_img), step=epoch)
+			self.writer.flush()
+		# summary = tf.Summary(value=[tf.Summary.Value(tag='sample-with-encoders', image=make_image(merged_img))])
+		# self.writer.add_summary(summary, global_step=epoch)
+		# self.writer.flush()
 
 
 def make_image(tensor):

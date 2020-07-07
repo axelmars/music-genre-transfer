@@ -170,7 +170,7 @@ class Converter:
 
 		model.compile(
 			optimizer=optimizers.Adam(lr=1e-4, beta_1=0.5, beta_2=0.999),
-			loss=[self.__perceptual_loss, losses.mean_squared_error],
+			loss=[self.__l1_and_l2_loss, losses.mean_squared_error],
 			loss_weights=[1, 1e4]
 		)
 
