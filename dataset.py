@@ -387,7 +387,7 @@ class SimpleFMA(DataSet):
 
 		for spec_path in spec_paths:
 			img_name = spec_path[-10:]
-			img_path = os.path.join(self._base_dir, 'datasets', 'fma_small_specs_img', img_name)
+			img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_img', img_name)
 
 			img_paths.append(img_path)
 
