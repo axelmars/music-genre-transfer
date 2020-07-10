@@ -414,7 +414,7 @@ class SimpleFMA(DataSet):
 			# img = np.load(img_paths[i])
 
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
-			img = img.T[:, None]
+			img = img.T[:, :, None]
 			imgs[i] = img
 			identities[i] = genre_ids[i]
 
