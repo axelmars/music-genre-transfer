@@ -522,8 +522,8 @@ class LRMultiplierWrapper(optimizers.Optimizer):
 				if w.name not in names:
 					self.weights.append(w)
 				# try:
-				# 	if w not in self.weights:
-				# 		self.weights.append(K.cast(w, K.floatx()))
+				# if w not in self.weights:
+				# 	self.weights.append(w)
 				# except InvalidArgumentError:
 				# 	if K.cast(w, K.floatx()) not in self.weights:
 				# 		self.weights.append(K.cast(w, K.floatx()))

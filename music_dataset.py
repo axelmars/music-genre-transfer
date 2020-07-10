@@ -17,11 +17,14 @@ TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
 TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
-CLASS_1_NAME = 'soundtrack'
+CLASS_1_NAME = 'instrumental'
 CLASS_2_NAME = 'pop'
 CLASS_1_ID = 18
 CLASS_2_ID = 10
-
+MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium'
+TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
+SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img'
+WAV_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav'
 
 
 def safe_parse(x):
@@ -70,13 +73,13 @@ def get_tracks_ids():
 def list_tracks():
     track_paths = []
     genre_ids = []
-    tracks_data = pd.read_csv('C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata/tracks.csv').iloc[2:][[TRACK_ID_COL_NAME, GENRES_COL_NAME]]
+    tracks_data = pd.read_csv(TRACKS_METADATA_FMA).iloc[2:][[TRACK_ID_COL_NAME, GENRES_COL_NAME]]
     tracks_data[GENRES_COL_NAME] = tracks_data[GENRES_COL_NAME].apply(safe_parse)
     tracks_data[TRACK_ID_COL_NAME] = tracks_data[TRACK_ID_COL_NAME].astype(int)
     mlb = MultiLabelBinarizer()
     tracks_data = tracks_data.join(pd.DataFrame(mlb.fit_transform(tracks_data.pop(GENRES_COL_NAME)), columns=mlb.classes_, index=tracks_data.index))
     # regex = re.compile('Rafd(\d+)_(\d+)_(\w+)_(\w+)_(\w+)_(\w+).jpg')
-    base_dir = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_small' # '\\' + track_id[:3] + '\\' + track_id + '.mp3'
+    base_dir = MP3_PATH  # '\\' + track_id[:3] + '\\' + track_id + '.mp3'
     for folder_name in os.listdir(base_dir):
         folder_path = os.path.join(base_dir, folder_name)
         for file_name in os.listdir(folder_path):
@@ -94,7 +97,7 @@ def list_tracks():
                 track_paths.append(os.path.join(folder_path, file_name))
                 genre_ids.append(CLASS_2_ID)
                 # print('appending 5', CLASS_2_ID)
-    print('num soundtrack: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
+    print('num instrumental: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
     print('num pop: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_2_ID)))
             # if
         # with open(self.__identity_map_path, 'r') as fd:
@@ -126,9 +129,10 @@ def create_spectrograms():
     with open('genre_ids.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
 
-    print('num pop: ', np.count_nonzero(np.array(genre_ids) == CLASS_2_ID), ' num classical: ', np.count_nonzero(np.array(genre_ids) == CLASS_1_ID))
+    # print('num pop: ', np.count_nonzero(np.array(genre_ids) == CLASS_2_ID), ' num classical: ', np.count_nonzero(np.array(genre_ids) == CLASS_1_ID))
     spec_paths = []
-    for track_path in wav_file_paths:
+    split_genres_ids = []
+    for track_path, genre_id in zip(wav_file_paths, genre_ids):
         # sample_rate, audio_data = wavfile.read(track_path)
         audio_data, sample_rate = librosa.load(track_path, sr=22050)
         # audio_data = audio_data.astype(float)
@@ -142,14 +146,21 @@ def create_spectrograms():
         # print(mel_specto.shape)
         # print(S_dB.shape)
         track_id = track_path[-10:-4]
-        im_save_path = os.path.join('C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_small_specs_img', track_id + '.png')
+        for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[1], 128)], axis=1)):
+            if partition.shape[1] == 128:
+                im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.png')
+                imwrite(im_save_path, partition)
+                spec_paths.append(im_save_path)
+                split_genres_ids.append(genre_id)
         # npy_save_path = os.path.join('C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_small_specs_npy', track_id + '.npy')
-        imwrite(im_save_path, S_dB)
         # np.save(npy_save_path, S_dB)
-        spec_paths.append(im_save_path)
+    print('num spectrograms: ', len(spec_paths))
 
     with open('spec_paths.pkl', 'wb') as f1:
         pickle.dump(spec_paths, f1)
+
+    with open('genre_ids.pkl', 'wb') as f2:
+        pickle.dump(split_genres_ids, f2)
 
 
 def convert_mp3_to_wav():
@@ -157,7 +168,7 @@ def convert_mp3_to_wav():
     wav_file_paths = []
     AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
     AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
-    wav_base_path = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_small_wav'
+    wav_base_path = WAV_OUTPUT_DIR
     for track_path in track_paths:
         mp3_track = AudioSegment.from_mp3(track_path)  # is it mono?
         wav_file_path = os.path.join(wav_base_path, track_path[-10:-4] + '.wav')
@@ -172,5 +183,5 @@ def convert_mp3_to_wav():
 
 
 if __name__ == '__main__':
-    convert_mp3_to_wav()
+    # convert_mp3_to_wav()
     create_spectrograms()
