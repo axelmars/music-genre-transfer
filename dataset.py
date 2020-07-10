@@ -386,7 +386,9 @@ class SimpleFMA(DataSet):
 		img_paths = []
 
 		for spec_path in spec_paths:
-			img_name = spec_path[-10:]
+			regex = re.compile(r'\d+\.png')
+
+			img_name = regex.match(spec_path).group(0)
 			img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_img', img_name)
 
 			img_paths.append(img_path)
