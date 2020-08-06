@@ -127,6 +127,7 @@ class Converter:
 
 		model.compile(
 			optimizer=LRMultiplierWrapper(
+				name='AdamOptimizer',
 				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 				multipliers={
 					'identity-embedding': 10.0
@@ -453,8 +454,8 @@ class CosineLearningRateScheduler(Callback):
 
 class LRMultiplierWrapper(optimizers.Optimizer):
 
-	def __init__(self, optimizer, multipliers, **kwargs):
-		super().__init__(**kwargs)
+	def __init__(self, optimizer, multipliers, name, **kwargs):
+		super().__init__(name, **kwargs)
 		self.optimizer = optimizers.get(optimizer)
 		self.multipliers = multipliers
 		if hasattr(self.optimizer, 'learning_rate'):
