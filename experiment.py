@@ -11,10 +11,11 @@ import os
 from imageio import imread
 import librosa.display
 import librosa.feature
-from keras.layers import GRU, Input, Embedding, Reshape, Conv1D, Conv2D
-from keras.models import Model
+# from keras.layers import GRU, Input, Embedding, Reshape, Conv1D, Conv2D
+# from keras.models import Model
 from skimage.color import rgb2gray
-import tensorflow as tf
+# import tensorflow as tf
+import imageio
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
@@ -22,6 +23,7 @@ TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
 CLASS_1_NAME = 'orchestral'
 CLASS_2_NAME = 'pop'
+SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img'
 
 
 def safe_parse(x):
@@ -145,30 +147,36 @@ def conv1d_experiment():
 
 
 if __name__ == '__main__':
-    # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
-    # # print(AudioSegment.ffmpeg)
-    AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
-    # path = r'C:\Users\Avi\Desktop\Uni\ResearchProjectLab\code_samples\music-genre-transfer'
-    # os.chdir(path)
-    # dirs = os.listdir(path)
-    # for file in dirs:
-    #     print(file)
-    sound = AudioSegment.from_mp3('007713.mp3')
-    sound.export('waved_acous.wav', format='wav')
-    samples, sample_rate = librosa.load('waved_acous.wav', sr=22050)
-    print(sample_rate, samples.shape)
-    samples = samples.astype(float)
-    # audio_data = samples.sum(axis=1) / 2
-    mel_specto = librosa.feature.melspectrogram(y=samples, sr=sample_rate)
-    S_dB = librosa.power_to_db(mel_specto, ref=np.max)
-    # print(mel_specto.shape)
-    # print(S_dB.shape)
-    save_path = 'test2.png'
-    plt.imsave(save_path, S_dB)
-    # gru_experiment()
-    # embedding_experiment()
-    # subprocess.call(['ffmpeg', '-i', '035545.mp3', 'waved_sound.wav'])
-    # get_orchestral_tracks()
-    spec = imread('test2.png')
-    print(rgb2gray(spec).shape)
-    # conv1d_experiment()
+    # # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
+    # # # print(AudioSegment.ffmpeg)
+    # AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
+    # # path = r'C:\Users\Avi\Desktop\Uni\ResearchProjectLab\code_samples\music-genre-transfer'
+    # # os.chdir(path)
+    # # dirs = os.listdir(path)
+    # # for file in dirs:
+    # #     print(file)
+    # sound = AudioSegment.from_mp3('007713.mp3')
+    # sound.export('waved_acous.wav', format='wav')
+    # samples, sample_rate = librosa.load('waved_acous.wav', sr=22050)
+    # print(sample_rate, samples.shape)
+    # samples = samples.astype(float)
+    # # audio_data = samples.sum(axis=1) / 2
+    # mel_specto = librosa.feature.melspectrogram(y=samples, sr=sample_rate)
+    # S_dB = librosa.power_to_db(mel_specto, ref=np.max)
+    # # print(mel_specto.shape)
+    # # print(S_dB.shape)
+    # save_path = 'test2.png'
+    # plt.imsave(save_path, S_dB)
+    # # gru_experiment()
+    # # embedding_experiment()
+    # # subprocess.call(['ffmpeg', '-i', '035545.mp3', 'waved_sound.wav'])
+    # # get_orchestral_tracks()
+    # spec = imread('test2.png')
+    # print(rgb2gray(spec).shape)
+    # # conv1d_experiment()
+    img = imageio.imread(os.path.join(SPECS_OUTPUT_DIR, '0051785.png'))
+    print(img)
+    img = img.astype(np.float32)
+    print(img)
+    img /= 255.0
+    print(img)

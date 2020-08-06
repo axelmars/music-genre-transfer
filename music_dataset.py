@@ -163,6 +163,24 @@ def create_spectrograms():
         pickle.dump(split_genres_ids, f2)
 
 
+def load_genre(genre_id):
+    with open('spec_paths.pkl', 'rb') as f1:
+        spec_paths = pickle.load(f1)
+
+    with open('genre_ids.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
+
+    new_spec_paths = []
+    for i, current_id in enumerate(genre_ids):
+        if int(current_id) == genre_id:
+            new_spec_paths.append(spec_paths[i])
+
+    print(len(new_spec_paths))
+
+    with open('spec_paths_' + str(genre_id) + '.pkl', 'wb') as f1:
+        pickle.dump(new_spec_paths, f1)
+
+
 def convert_mp3_to_wav():
     track_paths, genre_ids = list_tracks()
     wav_file_paths = []
@@ -184,4 +202,5 @@ def convert_mp3_to_wav():
 
 if __name__ == '__main__':
     # convert_mp3_to_wav()
-    create_spectrograms()
+    # create_spectrograms()
+    load_genre(CLASS_2_ID)
