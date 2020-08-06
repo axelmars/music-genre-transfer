@@ -143,7 +143,7 @@ class Converter:
 			# loss=self.__perceptual_loss_multiscale
 		)
 
-		lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
+		lr_scheduler = CosineLearningRateScheduler(max_lr=1e-6, min_lr=1e-7, total_epochs=n_epochs)
 		early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=1, patience=10, verbose=1)
 
 		tensorboard = EvaluationCallback(
