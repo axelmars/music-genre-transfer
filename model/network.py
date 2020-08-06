@@ -125,15 +125,20 @@ class Converter:
 
 		model = Model(inputs=[img, identity], outputs=generated_img)
 
+		# model.compile(
+		# 	optimizer=LRMultiplier(
+		# 		name='AdamOptimizer',
+		# 		optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
+		# 		multipliers={
+		# 			'identity-embedding': 10.0
+		# 		}
+		# 	),
+		#
+		# 	loss=self.__l1_and_l2_loss
+		# 	# loss=self.__perceptual_loss_multiscale
+		# )
 		model.compile(
-			optimizer=LRMultiplier(
-				name='AdamOptimizer',
-				optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
-				multipliers={
-					'identity-embedding': 10.0
-				}
-			),
-
+			optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 			loss=self.__l1_and_l2_loss
 			# loss=self.__perceptual_loss_multiscale
 		)
