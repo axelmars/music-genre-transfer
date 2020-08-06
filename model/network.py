@@ -455,7 +455,7 @@ class CosineLearningRateScheduler(Callback):
 class LRMultiplierWrapper(optimizers.Optimizer):
 
 	def __init__(self, optimizer, multipliers, name, **kwargs):
-		super().__init__(name, **kwargs)
+		super(LRMultiplierWrapper, self).__init__(name, **kwargs)
 		self.optimizer = optimizers.get(optimizer)
 		self.multipliers = multipliers
 		if hasattr(self.optimizer, 'learning_rate'):
