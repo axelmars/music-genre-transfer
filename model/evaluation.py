@@ -1,11 +1,16 @@
 import io
+import os
 
 import numpy as np
 from PIL import Image
+from imageio import imwrite
+import librosa
+from scipy.io import wavfile
 
 import tensorflow as tf
 from keras.callbacks import TensorBoard
 
+SAMPLE_RATE = 22050
 
 class EvaluationCallback(TensorBoard):
 
@@ -37,12 +42,19 @@ class EvaluationCallback(TensorBoard):
 
 		blank = np.zeros_like(imgs[0])
 		output = [np.concatenate([blank] + list(imgs), axis=1)]
+		if not os.path.isdir('samples'):
+			os.mkdir('samples')
 		for i in range(self.__n_samples_per_evaluation):
+			imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (imgs[i] * 255).astype(np.uint8))
+			convert_spec_to_audio(imgs[i], i)
 			converted_imgs = [imgs[i]] + [
 				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
 				for j in range(self.__n_samples_per_evaluation)
 			]
-
+			for j in range(self.__n_samples_per_evaluation):
+				img = self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
+				img = save_image(img, i, j)
+				convert_spec_to_audio(img, i, j)
 			output.append(np.concatenate(converted_imgs, axis=1))
 
 		merged_img = np.concatenate(output, axis=0)
@@ -114,3 +126,26 @@ def make_image(tensor):
 		image_string = out.getvalue()
 
 	return tf.expand_dims(tf.image.decode_png(contents=image_string, channels=channels), 0)
+
+
+def save_image(tensor, im_index, pose_index):
+	image = (np.squeeze(tensor) * 255).astype(np.uint8)
+	imwrite(os.path.join('samples','output' + str(im_index) + '-' + str(pose_index) + '.png'), image)
+	return np.squeeze(tensor)
+
+
+def convert_spec_to_audio(spec, i, j=512):
+	spec = np.squeeze(spec)
+	spec = (spec * -80.0 + 80.0) * -1
+	# print(spec)
+	spec = librosa.feature.inverse.db_to_power(spec)
+	# print('db_to_power done')
+	S = librosa.feature.inverse.mel_to_stft(spec)
+	print('starting griffin-lim...')
+	audio = librosa.griffinlim(S)
+	# audio = librosa.feature.inverse.mel_to_audio(spec, sr=22050)
+	print('griffin-lim done.')
+	# audio.export('reconstructed_wav.wav', format='wav')
+	# audio = np.asarray(audio, dtype=np.int16)
+
+	wavfile.write('reconstructed_wav' + str(i) + '-' + str(j) + '.wav', SAMPLE_RATE, audio)
