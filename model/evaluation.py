@@ -45,7 +45,7 @@ class EvaluationCallback(TensorBoard):
 		if not os.path.isdir('samples'):
 			os.mkdir('samples')
 		for i in range(self.__n_samples_per_evaluation):
-			imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (imgs[i] * 255).astype(np.uint8).T)
+			imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (np.squeeze(imgs[i]).T * 255).astype(np.uint8))
 			convert_spec_to_audio(imgs[i], i)
 			converted_imgs = [imgs[i]] + [
 				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
@@ -129,7 +129,7 @@ def make_image(tensor):
 
 
 def save_image(tensor, im_index, pose_index):
-	image = (np.squeeze(tensor) * 255).astype(np.uint8).T
+	image = (np.squeeze(tensor).T * 255).astype(np.uint8)
 	imwrite(os.path.join('samples','output' + str(im_index) + '-' + str(pose_index) + '.png'), image)
 	return np.squeeze(tensor)
 

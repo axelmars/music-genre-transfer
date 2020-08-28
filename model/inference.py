@@ -29,9 +29,14 @@ class Inferer:
         for i, sample_path in enumerate(sample_paths):
             img_name = re.search(r'\d+\.png', sample_path).group(0)
             img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_img', img_name)
-            full_spec = np.concatenate()
+            full_img = []
             for j in range(10):
-                pass
+                try:
+                    curr_path = img_path[:-5] + str(j) + img_path[-4:]
+                except FileNotFoundError:
+                    break
+                partial_img = imread(curr_path)
+
 
 
 
