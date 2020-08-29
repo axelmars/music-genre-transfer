@@ -5,7 +5,7 @@ default_config = dict(
 	pose_decay=0,
 
 	n_adain_layers=4,
-	adain_dim=256,
+	adain_dim=512,
 
 	perceptual_loss=dict(
 		layers=[2, 5, 8, 13, 18],

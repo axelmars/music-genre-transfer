@@ -25,7 +25,8 @@ class Inferer:
             sample_idx = np.random.choice(test_idx, size=5, replace=False)
         sample_paths = spec_paths[sample_idx]
         sample_genres = genre_ids[sample_idx]
-
+        sample_genres[sample_genres == 18] = 1
+        sample_genres[sample_genres == 10] = 0
         for i, sample_path in enumerate(sample_paths):
             img_name = re.search(r'\d+\.png', sample_path).group(0)
             img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_img', img_name)
@@ -35,7 +36,9 @@ class Inferer:
                     curr_path = img_path[:-5] + str(j) + img_path[-4:]
                 except FileNotFoundError:
                     break
-                partial_img = imread(curr_path)
+                full_img.append(imread(curr_path).T)
+
+
 
 
 
