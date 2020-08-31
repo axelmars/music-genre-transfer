@@ -112,7 +112,8 @@ class Converter:
 		self.generator = generator
 		self.identity_encoder = identity_encoder
 
-		self.vgg = self.__build_vgg()
+		self.vgg = None
+		# self.vgg = self.__build_vgg()
 
 	def train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
 		img = Input(shape=self.config.img_shape)

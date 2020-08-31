@@ -134,18 +134,15 @@ def save_image(tensor, im_index, pose_index):
 	return np.squeeze(tensor)
 
 
-def convert_spec_to_audio(spec, i, j=512):
-	spec = np.squeeze(spec).T
+def convert_spec_to_audio(spec, i, j=512, transpose=True):
+	spec = np.squeeze(spec)
+	if transpose:
+		spec = spec.T
 	spec = (spec * -80.0 + 80.0) * -1
-	# print(spec)
 	spec = librosa.feature.inverse.db_to_power(spec)
-	# print('db_to_power done')
 	S = librosa.feature.inverse.mel_to_stft(spec)
 	print('starting griffin-lim...')
 	audio = librosa.griffinlim(S)
-	# audio = librosa.feature.inverse.mel_to_audio(spec, sr=22050)
 	print('griffin-lim done.')
-	# audio.export('reconstructed_wav.wav', format='wav')
-	# audio = np.asarray(audio, dtype=np.int16)
 
 	wavfile.write('reconstructed_wav' + str(i) + '-' + str(j) + '.wav', SAMPLE_RATE, audio)
