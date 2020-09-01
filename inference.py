@@ -20,7 +20,7 @@ class Inferer:
         self.__base_dir = args.base_dir
         self.__num_samples = args.num_samples
         self.__model_dir = model_dir
-        self.__include_encoders = args.test
+        self.__include_encoders = args.is_test
 
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
 
