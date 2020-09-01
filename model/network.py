@@ -86,7 +86,7 @@ class Converter:
 		return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, identity_encoder)
 
 	def save(self, model_dir):
-		print('saving models...to ', model_dir)
+		print('saving models...')
 
 		with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
 			pickle.dump(self.config, config_fd)
