@@ -19,7 +19,7 @@ class Inferer:
         model_dir = assets.recreate_model_dir(args.model_name)
         self.__base_dir = args.base_dir
         self.__num_samples = args.num_samples
-        self.__model_dir = args.model_dir
+        self.__model_dir = model_dir
         self.__include_encoders = args.test
 
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
