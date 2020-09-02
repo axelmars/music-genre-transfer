@@ -7,7 +7,6 @@ import re
 import librosa
 from scipy.io import wavfile
 # from model import evaluation
-from assets import AssetManager
 from model.network import Converter
 
 SAMPLE_RATE = 22050
@@ -24,6 +23,7 @@ class Inferer:
         self.__include_encoders = args.is_test
 
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
+        self.__converter.pose_encoder.compile()
 
     def infer(self):
         with open(os.path.join(self.__base_dir, 'bin/genre_ids.pkl'), 'rb') as f2:
@@ -37,9 +37,9 @@ class Inferer:
         genre_ids[genre_ids == 18] = 1
         genre_ids[genre_ids == 10] = 0
         if not self.__include_encoders:
-            indices = np.load('bin/train_idx.npy')
+            indices = np.load(self.__base_dir, 'bin/train_idx.npy')
         else:
-            indices = np.load('bin/test_idx.npy')
+            indices = np.load(self.__base_dir, 'bin/test_idx.npy')
         sample_paths = spec_paths[indices]
         sample_genres = genre_ids[indices]
         sample_paths_0 = sample_paths[sample_genres == 0]
@@ -62,7 +62,7 @@ class Inferer:
                     dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
                     dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
                     try:
-                        os.makedirs(os.path.join('samples', 'genre_transform'))
+                        os.makedirs(os.path.join(self.__base_dir, 'samples', 'genre_transform'))
                     except FileExistsError:
                         pass
                     converted_imgs = [
@@ -70,12 +70,12 @@ class Inferer:
                         for k in range(10)
                     ]
                     full_spec = np.concatenate(converted_imgs, axis=1)
-                    imwrite(os.path.join('samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'), full_spec)
-                    convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
+                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'), full_spec)
+                    self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
                 try:
-                    os.makedirs(os.path.join('samples', 'identity_transform'))
+                    os.makedirs(os.path.join(self.__base_dir, 'samples', 'identity_transform'))
                 except FileExistsError:
                     pass
                 converted_imgs = [
@@ -83,8 +83,8 @@ class Inferer:
                     for k in range(10)
                 ]
                 full_spec = np.concatenate(converted_imgs, axis=1)
-                imwrite(os.path.join('samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), full_spec)
-                convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
+                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), full_spec)
+                self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _combine_specs_to_orig(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
@@ -100,20 +100,19 @@ class Inferer:
                 break
         return np.array(full_img), img_name
 
+    def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
+        spec = np.squeeze(spec)
+        spec = (spec * -80.0 + 80.0) * -1
+        spec = librosa.feature.inverse.db_to_power(spec)
+        S = librosa.feature.inverse.mel_to_stft(spec)
+        print('starting griffin-lim...')
+        audio = librosa.griffinlim(S)
+        print('griffin-lim done.')
 
-def convert_spec_to_audio(spec, i, j=None, genre_transform=False):
-    spec = np.squeeze(spec)
-    spec = (spec * -80.0 + 80.0) * -1
-    spec = librosa.feature.inverse.db_to_power(spec)
-    S = librosa.feature.inverse.mel_to_stft(spec)
-    print('starting griffin-lim...')
-    audio = librosa.griffinlim(S)
-    print('griffin-lim done.')
-
-    if genre_transform:
-        wavfile.write(os.path.join('samples', 'genre_tranform', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
-    else:
-        wavfile.write(os.path.join('samples', 'identity_tranform', str(i) + '.wav'), SAMPLE_RATE, audio)
+        if genre_transform:
+            wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_tranform', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
+        else:
+            wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_tranform', str(i) + '.wav'), SAMPLE_RATE, audio)
 
 
 def main():
