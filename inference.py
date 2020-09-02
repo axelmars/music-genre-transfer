@@ -37,9 +37,9 @@ class Inferer:
         genre_ids[genre_ids == 18] = 1
         genre_ids[genre_ids == 10] = 0
         if not self.__include_encoders:
-            indices = np.load(self.__base_dir, 'bin/train_idx.npy')
+            indices = np.load(os.path.join(self.__base_dir, 'bin/train_idx.npy'))
         else:
-            indices = np.load(self.__base_dir, 'bin/test_idx.npy')
+            indices = np.load(os.path.join(self.__base_dir, 'bin/test_idx.npy'))
         sample_paths = spec_paths[indices]
         sample_genres = genre_ids[indices]
         sample_paths_0 = sample_paths[sample_genres == 0]
