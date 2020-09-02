@@ -15,8 +15,9 @@ SAMPLE_RATE = 22050
 
 class Inferer:
     def __init__(self, args):
-        assets = AssetManager(args.base_dir)
-        model_dir = assets.recreate_model_dir(args.model_name)
+        # assets = AssetManager(args.base_dir)
+        model_dir = os.path.join(args.base_dir, 'cache', 'models', args.model_name)
+        # model_dir = assets.recreate_model_dir(args.model_name)
         self.__base_dir = args.base_dir
         self.__num_samples = args.num_samples
         self.__model_dir = model_dir
