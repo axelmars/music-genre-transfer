@@ -59,8 +59,8 @@ def split_samples(args):
 	test_idx = np.random.choice(n_samples, size=n_test_samples, replace=False)
 	train_idx = ~np.isin(np.arange(n_samples), test_idx)
 
-	np.save(os.path.join('bin/test_idx.npy', test_idx))
-	np.save(os.path.join('bin/train_idx.npy', train_idx))
+	np.save(os.path.join(args.base_dir, 'bin', 'test_idx.npy'), test_idx)
+	np.save(os.path.join(args.base_dir, 'bin', 'train_idx.npy'), train_idx)
 
 	np.savez(
 		file=assets.get_preprocess_file_path(args.test_data_name),
