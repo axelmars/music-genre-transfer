@@ -63,7 +63,7 @@ class Inferer:
                     dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
                     dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
                     try:
-                        Path(self.__base_dir/'samples'/'genre_transform').mkdir(parents=True)
+                        Path(self.__base_dir + '/samples/genre_transform').mkdir(parents=True)
                     except FileExistsError:
                         pass
                     converted_imgs = [
@@ -77,7 +77,7 @@ class Inferer:
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
                 try:
-                    Path(self.__base_dir/'samples'/'identity_transform').mkdir(parents=True)
+                    Path(self.__base_dir + '/samples/identity_transform').mkdir(parents=True)
                 except FileExistsError:
                     pass
                 converted_imgs = [
