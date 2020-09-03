@@ -111,9 +111,9 @@ class Inferer:
         print('griffin-lim done.')
 
         if genre_transform:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_tranform', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_transform', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
         else:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_tranform', str(i) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_transform', str(i) + '.wav'), SAMPLE_RATE, audio)
 
 
 def main():
