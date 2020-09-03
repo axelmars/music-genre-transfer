@@ -66,10 +66,10 @@ class Inferer:
                     except FileExistsError:
                         pass
                     converted_imgs = [
-                        self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0].T
+                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
                         for k in range(10)
                     ]
-                    full_spec = np.concatenate(converted_imgs, axis=1)
+                    full_spec = (np.concatenate(converted_imgs, axis=1) * 255).astype(np.uint8)
                     imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'), full_spec)
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
@@ -79,10 +79,10 @@ class Inferer:
                 except FileExistsError:
                     pass
                 converted_imgs = [
-                    self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0].T
+                    np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
                     for k in range(10)
                 ]
-                full_spec = np.concatenate(converted_imgs, axis=1)
+                full_spec = (np.concatenate(converted_imgs, axis=1) * 255).astype(np.uint8)
                 imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), full_spec)
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
@@ -93,7 +93,7 @@ class Inferer:
         for j in range(10):
             try:
                 curr_path = img_path[:-5] + str(j) + img_path[-4:]
-                img = imread(curr_path).T.astype(np.float32) / 255.0
+                img = imread(curr_path).T[:, :, None].astype(np.float32) / 255.0
                 full_img.append(img)
             except FileNotFoundError:
                 print('img not found at ', img_path)
@@ -101,7 +101,6 @@ class Inferer:
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
-        spec = np.squeeze(spec)
         spec = (spec * -80.0 + 80.0) * -1
         spec = librosa.feature.inverse.db_to_power(spec)
         S = librosa.feature.inverse.mel_to_stft(spec)
