@@ -1,6 +1,7 @@
 import argparse
 import os
 
+import pickle
 import numpy as np
 
 import dataset
@@ -52,12 +53,20 @@ def split_samples(args):
 	imgs, identities, poses = data['imgs'], data['identities'], data['poses']
 
 	n_identities = np.unique(identities).size
-	n_samples = imgs.shape[0]
 
+	with open(os.path.join(args.base_dir, 'bin', 'spec_paths.pkl'), 'rb') as f1:
+		spec_paths = np.array(pickle.load(f1))
+
+	# Assuming order is kept
+	spec_ids = np.unique(np.array([x[-12:-6] for x in spec_paths]))
+	n_samples = spec_ids.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
 
-	test_idx = np.random.choice(n_samples, size=n_test_samples, replace=False)
-	train_idx = ~np.isin(np.arange(n_samples), test_idx)
+	random_ids = np.random.choice(spec_ids, size=n_test_samples, replace=False)
+
+	test_idx = np.nonzero(spec_paths == random_ids[:, None])[1]
+
+	train_idx = ~np.isin(np.arange(spec_paths.shape[0]), test_idx)
 
 	np.save(os.path.join(args.base_dir, 'bin', 'test_idx.npy'), test_idx)
 	np.save(os.path.join(args.base_dir, 'bin', 'train_idx.npy'), train_idx)

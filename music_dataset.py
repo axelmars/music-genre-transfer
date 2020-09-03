@@ -8,7 +8,7 @@ import librosa.display
 import ast
 import pickle
 from imageio import imwrite, imread
-
+from pathlib import Path
 from scipy.io import wavfile
 
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -24,6 +24,7 @@ CLASS_2_ID = 10
 MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium'
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img'
+OVERLAP_SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap'
 WAV_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav'
 
 
@@ -117,7 +118,7 @@ def list_tracks():
     return track_paths, genre_ids
 
 
-def create_spectrograms():
+def create_spectrograms(overlap=False):
     """
     loads tracks according to given ids and saves their spectrograms.
     :param tracks_ids:
@@ -146,9 +147,22 @@ def create_spectrograms():
         # print(mel_specto.shape)
         # print(S_dB.shape)
         track_id = track_path[-10:-4]
-        for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[1], 128)], axis=1)):
-            if partition.shape[1] == 128:
-                im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.png')
+        if not overlap:
+            for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[1], 128)], axis=1)):
+                if partition.shape[1] == 128:
+                    im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.png')
+                    imwrite(im_save_path, partition)
+                    spec_paths.append(im_save_path)
+                    split_genres_ids.append(genre_id)
+        else:
+            # 0.25 overlap ==> 32 pixels overlap
+            for i, partition in enumerate([S_dB[:, j: j + 128] for j in range(0, S_dB.shape[1] - 128, 96)]):
+                Path(OVERLAP_SPECS_OUTPUT_DIR).mkdir(exist_ok=True)
+                if i < 10:
+                    num = '0' + str(i)
+                else:
+                    num = str(i)
+                im_save_path = os.path.join(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.png')
                 imwrite(im_save_path, partition)
                 spec_paths.append(im_save_path)
                 split_genres_ids.append(genre_id)
@@ -202,5 +216,5 @@ def convert_mp3_to_wav():
 
 if __name__ == '__main__':
     # convert_mp3_to_wav()
-    # create_spectrograms()
-    load_genre(CLASS_2_ID)
+    create_spectrograms(overlap=True)
+    # load_genre(CLASS_2_ID)

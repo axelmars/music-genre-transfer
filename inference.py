@@ -22,6 +22,7 @@ class Inferer:
         self.__num_samples = args.num_samples
         self.__model_dir = model_dir
         self.__include_encoders = args.is_test
+        self.__overlap = args.is_overlapping
 
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
         self.__converter.pose_encoder.compile()
@@ -54,12 +55,18 @@ class Inferer:
 
     def _transform(self, sample_paths, original_genre, dest_sample_paths=None, destination_genre=None):
         for i, sample_path in enumerate(sample_paths):
-            imgs, img_name = self._combine_specs_to_orig(sample_path)
+            if not self.__overlap:
+                imgs, img_name = self._combine_specs_to_orig(sample_path)
+            else:
+                imgs, img_name = self._combine_overlapping_specs(sample_path)
             pose_codes = self.__converter.pose_encoder.predict(imgs)
             identity_codes = self.__converter.identity_embedding.predict(np.array([original_genre] * imgs.shape[0]))
             if destination_genre is not None:
                 for dest_sample_path in dest_sample_paths:
-                    dest_imgs, dest_img_name = self._combine_specs_to_orig(dest_sample_path)
+                    if not self.__overlap:
+                        dest_imgs, dest_img_name = self._combine_specs_to_orig(dest_sample_path)
+                    else:
+                        dest_imgs, dest_img_name = self._combine_overlapping_specs(dest_sample_path)
                     dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
                     dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
                     try:
@@ -70,7 +77,10 @@ class Inferer:
                         np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
                         for k in range(10)
                     ]
-                    full_spec = np.concatenate(converted_imgs, axis=1)
+                    if not self.__overlap:
+                        full_spec = np.concatenate(converted_imgs, axis=1)
+                    else:
+                        full_spec = self._concatenate_overlap(converted_imgs)
                     imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'),
                             (full_spec * 255).astype(np.uint8))
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
@@ -84,9 +94,19 @@ class Inferer:
                     np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
                     for k in range(10)
                 ]
-                full_spec = np.concatenate(converted_imgs, axis=1)
+                if not self.__overlap:
+                    full_spec = np.concatenate(converted_imgs, axis=1)
+                else:
+                    full_spec = self._concatenate_overlap(converted_imgs)
                 imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), (full_spec * 255).astype(np.uint8))
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
+
+    def _concatenate_overlap(self, imgs):
+        full_spec = np.zeros((128, 1280))
+        for i, img in zip(range(0, 1280 - 128, 96), imgs):
+
+            full_spec[i: i + 128] = img
+
 
     def _combine_specs_to_orig(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
@@ -95,6 +115,24 @@ class Inferer:
         for j in range(10):
             try:
                 curr_path = img_path[:-5] + str(j) + img_path[-4:]
+                img = imread(curr_path).T[:, :, None].astype(np.float32) / 255.0
+                full_img.append(img)
+            except FileNotFoundError:
+                print('img not found at ', img_path)
+                break
+        return np.array(full_img), img_name
+
+    def _combine_overlapping_specs(self, sample_path):
+        img_name = re.search(r'\d+\.png', sample_path).group(0)
+        img_path = os.path.join(self.__base_dir, 'datasets', 'fma_medium_specs_overlap', img_name)
+        full_img = []
+        for j in range(13):
+            if j < 10:
+                num = '0' + str(j)
+            else:
+                num = str(j)
+            try:
+                curr_path = img_path[:-6] + num + img_path[-4:]
                 img = imread(curr_path).T[:, :, None].astype(np.float32) / 255.0
                 full_img.append(img)
             except FileNotFoundError:
@@ -123,6 +161,7 @@ def main():
     parser.add_argument('-mn', '--model-name', type=str, required=True)
     parser.add_argument('-ns', '--num-samples', type=int, required=True)
     parser.add_argument('-it', '--is-test', type=int, required=True)
+    parser.add_argument('-io', '--is-overlapping', type=int, required=True)
 
     args = parser.parse_args()
     inferer = Inferer(args)
