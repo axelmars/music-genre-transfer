@@ -69,8 +69,9 @@ class Inferer:
                         np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
                         for k in range(10)
                     ]
-                    full_spec = (np.concatenate(converted_imgs, axis=1) * 255).astype(np.uint8)
-                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'), full_spec)
+                    full_spec = np.concatenate(converted_imgs, axis=1)
+                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'),
+                            (full_spec * 255).astype(np.uint8))
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
@@ -82,8 +83,8 @@ class Inferer:
                     np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
                     for k in range(10)
                 ]
-                full_spec = (np.concatenate(converted_imgs, axis=1) * 255).astype(np.uint8)
-                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), full_spec)
+                full_spec = np.concatenate(converted_imgs, axis=1)
+                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), (full_spec * 255).astype(np.uint8))
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _combine_specs_to_orig(self, sample_path):
