@@ -102,10 +102,20 @@ class Inferer:
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
+        mask = binomial_mask()
+        first_in_pair = np.concatenate((imgs[0], np.zeros(128, 96)), axis=1)
+        second_in_pair = np.concatenate((np.zeros(128, 96), imgs[1]), axis=1)
+        merge = (1 - mask) * first_in_pair + mask * second_in_pair
+        last_img = merge[:, -128:]
         full_spec = np.zeros((128, 1280))
-        for i, img in zip(range(0, 1280 - 128, 96), imgs):
-
-            full_spec[i: i + 128] = img
+        full_spec[:, 0: 2 * 128 - 32] = merge
+        for i, img in zip(range(96, 1280 - 128, 96), imgs[1:]):
+            first_in_pair = np.concatenate((last_img, np.zeros(128, 96)), axis=1)
+            second_in_pair = np.concatenate((np.zeros(128, 96), img), axis=1)
+            merge = (1 - mask) * first_in_pair + mask * second_in_pair
+            last_img = merge[:, -128:]
+            full_spec[:, i: i + 2 * 128 - 32] = merge
+        return full_spec
 
 
     def _combine_specs_to_orig(self, sample_path):
@@ -152,6 +162,30 @@ class Inferer:
             wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_transform', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
         else:
             wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_transform', str(i) + '.wav'), SAMPLE_RATE, audio)
+
+
+def binomial_mask(a=1, x=1, im_shape=(128, 128)):
+    n = int(.25 * im_shape[1]) - 1
+    term = pow(a, n)
+    # print(term, end=" ")
+    series_list = [term]
+    # Computing and printing remaining terms
+    for i in range(1, n + 1):
+        # Find current term using previous terms
+        # We increment power of x by 1, decrement
+        # power of a by 1 and compute nCi using
+        # previous term by multiplying previous
+        # term with (n - i + 1)/i
+        term = int(term * x * (n - i + 1) / (i * a))
+        series_list.append(term)
+    ser_array = np.array(series_list)
+    ser_array_squash = ser_array / np.max(ser_array) / 2
+    half = int(n / 2)
+    ser_array_squash = np.concatenate((ser_array_squash[: half], 1 - ser_array_squash[half:]))
+    mask = np.zeros((im_shape[0], 2 * im_shape[1] - int(.25 * im_shape[1])))
+    mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1])] = np.ones((im_shape[0], .75 * im_shape[1]))
+    mask[:, int(.75 * im_shape[1]) : im_shape[1]] = np.tile(ser_array_squash, (im_shape[0], 1))
+    return mask
 
 
 def main():
