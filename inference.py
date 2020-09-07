@@ -110,14 +110,14 @@ class Inferer:
         last_img = merge[:, -128:]
         full_spec = np.zeros((128, 1280))
         full_spec[:, 0: 2 * 128 - 32] = merge
-        for i, img in zip(range(96, 1280 - 96, 96), imgs[1:]):
+        for i, img in zip(range(128 - 32, 1280 - 128, 96), imgs[1:]):
+            print(i)
             first_in_pair = np.concatenate((last_img, np.zeros((128, 96))), axis=1)
             second_in_pair = np.concatenate((np.zeros((128, 96)), img), axis=1)
             merge = (1 - mask) * first_in_pair + mask * second_in_pair
             last_img = merge[:, -128:]
-            full_spec[:, i: i + 2 * 128 - 32] = merge
+            full_spec[:, i - 96: i + 128] = merge
         return full_spec
-
 
     def _combine_specs_to_orig(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
