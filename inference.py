@@ -74,13 +74,17 @@ class Inferer:
                         Path(self.__base_dir + '/samples/genre_transform').mkdir(parents=True)
                     except FileExistsError:
                         pass
-                    converted_imgs = [
-                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
-                        for k in range(10)
-                    ]
                     if not self.__overlap:
+                        converted_imgs = [
+                            np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
+                            for k in range(10)
+                        ]
                         full_spec = np.concatenate(converted_imgs, axis=1)
                     else:
+                        converted_imgs = [
+                            np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
+                            for k in range(13)
+                        ]
                         full_spec = self._concatenate_overlap(converted_imgs)
                     imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'),
                             (full_spec * 255).astype(np.uint8))
@@ -91,13 +95,17 @@ class Inferer:
                     Path(self.__base_dir + '/samples/identity_transform').mkdir(parents=True)
                 except FileExistsError:
                     pass
-                converted_imgs = [
-                    np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
-                    for k in range(10)
-                ]
                 if not self.__overlap:
+                    converted_imgs = [
+                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
+                        for k in range(10) if not self.__overlap
+                    ]
                     full_spec = np.concatenate(converted_imgs, axis=1)
                 else:
+                    converted_imgs = [
+                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
+                        for k in range(13) if not self.__overlap
+                    ]
                     full_spec = self._concatenate_overlap(converted_imgs)
                 imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), (full_spec * 255).astype(np.uint8))
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
@@ -122,7 +130,7 @@ class Inferer:
 
     def _combine_specs_to_orig(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
-        img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_img', img_name)
+        img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_imgs', img_name)
         full_img = []
         for j in range(10):
             try:
