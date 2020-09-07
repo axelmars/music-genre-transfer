@@ -19,6 +19,7 @@ class Inferer:
         model_dir = os.path.join(args.base_dir, 'cache', 'models', args.model_name)
         # model_dir = assets.recreate_model_dir(args.model_name)
         self.__base_dir = args.base_dir
+        self.__dataset_dir = args.dataset_dir
         self.__num_samples = args.num_samples
         self.__model_dir = model_dir
         self.__include_encoders = args.is_test
@@ -120,7 +121,7 @@ class Inferer:
 
     def _combine_specs_to_orig(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
-        img_path = os.path.join(self.__base_dir, 'datasets', 'fma_medium_specs_img', img_name)
+        img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_img', img_name)
         full_img = []
         for j in range(10):
             try:
@@ -134,7 +135,7 @@ class Inferer:
 
     def _combine_overlapping_specs(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
-        img_path = os.path.join(self.__base_dir, 'datasets', 'fma_medium_specs_overlap', img_name)
+        img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_overlap', img_name)
         full_img = []
         for j in range(13):
             if j < 10:
@@ -196,6 +197,7 @@ def main():
     parser.add_argument('-ns', '--num-samples', type=int, required=True)
     parser.add_argument('-it', '--is-test', type=int, required=True)
     parser.add_argument('-io', '--is-overlapping', type=int, required=True)
+    parser.add_argument('-dd', '--dataset-dir', type=str, required=True)
 
     args = parser.parse_args()
     inferer = Inferer(args)
