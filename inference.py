@@ -184,8 +184,8 @@ def binomial_mask(a=1, x=1, im_shape=(128, 128)):
     half = int(n / 2)
     ser_array_squash = np.concatenate((ser_array_squash[: half], 1 - ser_array_squash[half:]))
     mask = np.zeros((im_shape[0], 2 * im_shape[1] - int(.25 * im_shape[1])))
-    mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1])] = np.ones((im_shape[0], .75 * im_shape[1]))
-    mask[:, int(.75 * im_shape[1]) : im_shape[1]] = np.tile(ser_array_squash, (im_shape[0], 1))
+    mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1])] = np.ones((im_shape[0], int(.75 * im_shape[1])))
+    mask[:, int(.75 * im_shape[1]): im_shape[1]] = np.tile(ser_array_squash, (im_shape[0], 1))
     return mask
 
 
