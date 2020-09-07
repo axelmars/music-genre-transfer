@@ -110,7 +110,7 @@ class Inferer:
         last_img = merge[:, -128:]
         full_spec = np.zeros((128, 1280))
         full_spec[:, 0: 2 * 128 - 32] = merge
-        for i, img in zip(range(96, 1280 - 128, 96), imgs[1:]):
+        for i, img in zip(range(96, 1280 - 96, 96), imgs[1:]):
             first_in_pair = np.concatenate((last_img, np.zeros((128, 96))), axis=1)
             second_in_pair = np.concatenate((np.zeros((128, 96)), img), axis=1)
             merge = (1 - mask) * first_in_pair + mask * second_in_pair
