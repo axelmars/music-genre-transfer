@@ -98,13 +98,13 @@ class Inferer:
                 if not self.__overlap:
                     converted_imgs = [
                         np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
-                        for k in range(10) if not self.__overlap
+                        for k in range(10)
                     ]
                     full_spec = np.concatenate(converted_imgs, axis=1)
                 else:
                     converted_imgs = [
                         np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
-                        for k in range(13) if not self.__overlap
+                        for k in range(13)
                     ]
                     print('length converted_imgs: ', len(converted_imgs))
                     full_spec = self._concatenate_overlap(converted_imgs)
