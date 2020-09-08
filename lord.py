@@ -70,7 +70,7 @@ def split_samples(args):
 	print('test_idx shape: ', test_idx.shape)
 
 	train_idx = ~np.isin(np.arange(spec_paths_ids.shape[0]), test_idx)
-	print('train_idx shape: ', train_idx.shape)
+	print('train_idx shape: ', np.count_nonzero(train_idx))
 
 	print(spec_paths[train_idx][:26])
 
