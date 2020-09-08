@@ -42,19 +42,19 @@ class EvaluationCallback(TensorBoard):
 
 		blank = np.zeros_like(imgs[0])
 		output = [np.concatenate([blank] + list(imgs), axis=1)]
-		if not os.path.isdir('samples'):
-			os.mkdir('samples')
+		# if not os.path.isdir('samples'):
+		# 	os.mkdir('samples')
 		for i in range(self.__n_samples_per_evaluation):
-			imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (np.squeeze(imgs[i]).T * 255).astype(np.uint8))
-			convert_spec_to_audio(imgs[i], i)
+			# imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (np.squeeze(imgs[i]).T * 255).astype(np.uint8))
+			# convert_spec_to_audio(imgs[i], i)
 			converted_imgs = [imgs[i]] + [
 				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
 				for j in range(self.__n_samples_per_evaluation)
 			]
-			for j in range(self.__n_samples_per_evaluation):
-				img = self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
-				img = save_image(img, i, j)
-				convert_spec_to_audio(img, i, j)
+			# for j in range(self.__n_samples_per_evaluation):
+			# 	img = self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
+			# 	img = save_image(img, i, j)
+			# 	convert_spec_to_audio(img, i, j)
 			output.append(np.concatenate(converted_imgs, axis=1))
 
 		merged_img = np.concatenate(output, axis=0)
