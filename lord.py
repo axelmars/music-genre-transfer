@@ -58,13 +58,14 @@ def split_samples(args):
 		spec_paths = np.array(pickle.load(f1))
 
 	# Assuming order is kept
-	spec_ids = np.unique(np.array([x[-12:-6] for x in spec_paths]))
+	spec_paths_ids = np.array([x[-12:-6] for x in spec_paths])
+	spec_ids = np.unique(spec_paths_ids)
 	n_samples = spec_ids.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
 
 	random_ids = np.random.choice(spec_ids, size=n_test_samples, replace=False)
 
-	test_idx = np.nonzero(spec_paths == random_ids[:, None])[1]
+	test_idx = np.nonzero(spec_paths_ids == random_ids[:, None])[1]
 	print('test_idx shape: ', test_idx.shape)
 
 	train_idx = ~np.isin(np.arange(spec_paths.shape[0]), test_idx)
