@@ -65,8 +65,10 @@ def split_samples(args):
 	random_ids = np.random.choice(spec_ids, size=n_test_samples, replace=False)
 
 	test_idx = np.nonzero(spec_paths == random_ids[:, None])[1]
+	print('test_idx shape: ', test_idx.shape)
 
 	train_idx = ~np.isin(np.arange(spec_paths.shape[0]), test_idx)
+	print('train_idx shape: ', train_idx.shape)
 
 	np.save(os.path.join(args.base_dir, 'bin', 'test_idx.npy'), test_idx)
 	np.save(os.path.join(args.base_dir, 'bin', 'train_idx.npy'), train_idx)
