@@ -19,13 +19,13 @@ TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
 CLASS_1_NAME = 'instrumental'
 CLASS_2_NAME = 'pop'
-CLASS_1_ID = 18
-CLASS_2_ID = 10
+CLASS_1_ID = 10
+CLASS_2_ID = 5
 MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium'
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img'
-OVERLAP_SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap'
-WAV_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav'
+OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}'
+WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
 
 
 def safe_parse(x):
@@ -98,8 +98,8 @@ def list_tracks():
                 track_paths.append(os.path.join(folder_path, file_name))
                 genre_ids.append(CLASS_2_ID)
                 # print('appending 5', CLASS_2_ID)
-    print('num instrumental: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
-    print('num pop: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_2_ID)))
+    print(f'num {CLASS_1_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
+    print(f'num {CLASS_2_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_2_ID)))
             # if
         # with open(self.__identity_map_path, 'r') as fd:
         #     lines = fd.read().splitlines()
@@ -124,10 +124,10 @@ def create_spectrograms(overlap=False):
     :param tracks_ids:
     :return:
     """
-    with open('wav_file_paths.pkl', 'rb') as f1:
+    with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
         wav_file_paths = pickle.load(f1)
 
-    with open('genre_ids.pkl', 'rb') as f2:
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
 
     # print('num pop: ', np.count_nonzero(np.array(genre_ids) == CLASS_2_ID), ' num classical: ', np.count_nonzero(np.array(genre_ids) == CLASS_1_ID))
@@ -170,10 +170,10 @@ def create_spectrograms(overlap=False):
         # np.save(npy_save_path, S_dB)
     print('num spectrograms: ', len(spec_paths))
 
-    with open('spec_paths.pkl', 'wb') as f1:
+    with open(f'spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f1:
         pickle.dump(spec_paths, f1)
 
-    with open('genre_ids.pkl', 'wb') as f2:
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
         pickle.dump(split_genres_ids, f2)
 
 
@@ -207,10 +207,10 @@ def convert_mp3_to_wav():
         mp3_track.export(wav_file_path, format='wav')  # save wav file to separate directory
         wav_file_paths.append(wav_file_path)
 
-    with open('wav_file_paths.pkl', 'wb') as f1:
+    with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f1:
         pickle.dump(wav_file_paths, f1)
 
-    with open('genre_ids.pkl', 'wb') as f2:
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
         pickle.dump(genre_ids, f2)
 
 
