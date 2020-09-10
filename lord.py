@@ -59,7 +59,7 @@ def split_samples(args):
 
 	print('spec_paths shape: ', spec_paths.shape)
 	# Assuming order is kept
-	spec_paths_ids = np.array([x[-12:-6] for x in spec_paths])
+	spec_paths_ids = np.array([x[-13:-7] for x in spec_paths])
 	spec_ids = np.unique(spec_paths_ids)
 	n_samples = spec_ids.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
