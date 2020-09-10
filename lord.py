@@ -98,7 +98,7 @@ def train(args):
 
 	identities[identities == 10] = 0
 	identities[identities == 5] = 1
-	# imgs = imgs.astype(np.float32) / 255.0
+	imgs = imgs / 255.0
 
 	converter = Converter.build(
 		img_shape=imgs.shape[1:],
