@@ -9,7 +9,6 @@ import imageio
 # import cv2
 import h5py
 import pickle
-from music_dataset import CLASS_1_ID, CLASS_2_ID
 
 from keras.datasets import mnist
 from scipy.ndimage.filters import gaussian_filter
@@ -25,7 +24,8 @@ TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
 CLASS_1_NAME = 'orchestral'
 CLASS_2_NAME = 'pop'
-
+CLASS_1_ID = 10
+CLASS_2_ID = 5
 
 supported_datasets = [
 	'mnist',
