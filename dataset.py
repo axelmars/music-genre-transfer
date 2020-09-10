@@ -388,7 +388,7 @@ class SimpleFMA(DataSet):
 		for spec_path in spec_paths:
 
 			img_name = re.search(r'\d+\.png', spec_path).group(0)
-			img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_overlap', img_name)
+			img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_overlap-10-5', img_name)
 
 			img_paths.append(img_path)
 

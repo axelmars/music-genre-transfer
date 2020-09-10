@@ -96,55 +96,55 @@ def turn_tracks_into_short_tracks():
     """
     pass
 
-
-def preprocess():
-    tracks_ids = get_tracks_ids()
-    load_tracks(tracks_ids)
-
-
-def gru_experiment():
-    inputs = Input(shape=(10, 8))
-    output, hidden = GRU(4, return_sequences=True, return_state=True)(inputs)
-    model = Model(inputs=inputs, outputs=[output, hidden])
-    data = np.random.normal(size=[16, 10, 8])
-    print(model.predict(data))
-
-
-def embedding_experiment():
-    identity = Input(shape=(1,))
-
-    identity_embedding = Embedding(input_dim=2, output_dim=256, name='identity-embedding')(identity)
-    identity_embedding = Reshape(target_shape=(256,))(identity_embedding)
-
-    model = Model(inputs=identity, outputs=identity_embedding)
-
-    sample_rate, audio_data = wavfile.read('waved_sound.wav')
-    audio_data = audio_data.astype(float)
-    if audio_data.shape[1] == 2:
-        audio_data = np.round(audio_data.sum(axis=1) / 2)
-    mel_specto = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
-    S_dB = librosa.power_to_db(mel_specto, ref=np.max)
-    data = S_dB
-
-    plt.imshow(data)
-    plt.show()
-    # print(data)
-    print(data.shape)
-    print(model.predict(data))
-    #
-    # print('identity embedding:')
-    # model.summary()
-
-    return model
-
-
-def conv1d_experiment():
-    input_shape = (4, 128, 1033)
-    x = tf.random.normal(input_shape)
-    y = Conv1D(128, 7, padding='same', activation='relu', input_shape=input_shape)(x)
-
-    print(y.shape)
-
+#
+# def preprocess():
+#     tracks_ids = get_tracks_ids()
+#     load_tracks(tracks_ids)
+#
+#
+# def gru_experiment():
+#     inputs = Input(shape=(10, 8))
+#     output, hidden = GRU(4, return_sequences=True, return_state=True)(inputs)
+#     model = Model(inputs=inputs, outputs=[output, hidden])
+#     data = np.random.normal(size=[16, 10, 8])
+#     print(model.predict(data))
+#
+#
+# def embedding_experiment():
+#     identity = Input(shape=(1,))
+#
+#     identity_embedding = Embedding(input_dim=2, output_dim=256, name='identity-embedding')(identity)
+#     identity_embedding = Reshape(target_shape=(256,))(identity_embedding)
+#
+#     model = Model(inputs=identity, outputs=identity_embedding)
+#
+#     sample_rate, audio_data = wavfile.read('waved_sound.wav')
+#     audio_data = audio_data.astype(float)
+#     if audio_data.shape[1] == 2:
+#         audio_data = np.round(audio_data.sum(axis=1) / 2)
+#     mel_specto = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
+#     S_dB = librosa.power_to_db(mel_specto, ref=np.max)
+#     data = S_dB
+#
+#     plt.imshow(data)
+#     plt.show()
+#     # print(data)
+#     print(data.shape)
+#     print(model.predict(data))
+#     #
+#     # print('identity embedding:')
+#     # model.summary()
+#
+#     return model
+#
+#
+# def conv1d_experiment():
+#     input_shape = (4, 128, 1033)
+#     x = tf.random.normal(input_shape)
+#     y = Conv1D(128, 7, padding='same', activation='relu', input_shape=input_shape)(x)
+#
+#     print(y.shape)
+#
 
 if __name__ == '__main__':
     # # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"

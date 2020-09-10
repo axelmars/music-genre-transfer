@@ -140,29 +140,29 @@ def create_spectrograms(overlap=False):
         if len(audio_data.shape) > 1:
             audio_data = audio_data.mean(axis=1)
         mel_specto = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
-        S_dB = librosa.power_to_db(mel_specto, ref=np.max)
-        S_dB = ((-80.0 - S_dB) / -80.0) * 255
-        S_dB = S_dB.astype(np.uint8)
+        # S_dB = librosa.power_to_db(mel_specto, ref=np.max)
+        # S_dB = ((-80.0 - S_dB) / -80.0) * 255
+        # S_dB = S_dB.astype(np.uint8)
         # spec_im = S_dB.astype(np.uint8)
         # print(mel_specto.shape)
         # print(S_dB.shape)
         track_id = track_path[-10:-4]
         if not overlap:
-            for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[1], 128)], axis=1)):
+            for i, partition in enumerate(np.split(mel_specto, [x for x in range(128, mel_specto.shape[1], 128)], axis=1)):
                 if partition.shape[1] == 128:
-                    im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.png')
+                    im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.tiff')
                     imwrite(im_save_path, partition)
                     spec_paths.append(im_save_path)
                     split_genres_ids.append(genre_id)
         else:
             # 0.25 overlap ==> 32 pixels overlap
-            for i, partition in enumerate([S_dB[:, j: j + 128] for j in range(0, S_dB.shape[1] - 128, 96)]):
+            for i, partition in enumerate([mel_specto[:, j: j + 128] for j in range(0, mel_specto.shape[1] - 128, 96)]):
                 Path(OVERLAP_SPECS_OUTPUT_DIR).mkdir(exist_ok=True)
                 if i < 10:
                     num = '0' + str(i)
                 else:
                     num = str(i)
-                im_save_path = os.path.join(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.png')
+                im_save_path = os.path.join(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.tiff')
                 imwrite(im_save_path, partition)
                 spec_paths.append(im_save_path)
                 split_genres_ids.append(genre_id)
