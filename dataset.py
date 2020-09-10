@@ -9,6 +9,7 @@ import imageio
 # import cv2
 import h5py
 import pickle
+from music_dataset import CLASS_1_ID, CLASS_2_ID
 
 from keras.datasets import mnist
 from scipy.ndimage.filters import gaussian_filter
@@ -380,7 +381,7 @@ class SimpleFMA(DataSet):
 
 	def __list_imgs(self):
 
-		with open(os.path.join(self._base_dir, 'bin/spec_paths.pkl'), 'rb') as fd:
+		with open(os.path.join(self._base_dir, f'bin/spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as fd:
 			spec_paths = pickle.load(fd)
 
 		img_paths = []
@@ -388,7 +389,7 @@ class SimpleFMA(DataSet):
 		for spec_path in spec_paths:
 
 			img_name = re.search(r'\d+\.png', spec_path).group(0)
-			img_path = os.path.join(self._base_dir, 'datasets', 'fma_medium_specs_overlap-10-5', img_name)
+			img_path = os.path.join(self._base_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
 
 			img_paths.append(img_path)
 
@@ -398,7 +399,7 @@ class SimpleFMA(DataSet):
 
 		img_paths = self.__list_imgs()
 
-		with open(os.path.join(self._base_dir, 'bin/genre_ids.pkl'), 'rb') as f2:
+		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
 			genre_ids = pickle.load(f2)
 
 		# img_paths, identity_ids = self.__list_imgs()
