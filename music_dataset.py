@@ -24,7 +24,7 @@ CLASS_2_ID = 5
 MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium'
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
-OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-c'
+OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-l'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
 
 
@@ -139,32 +139,34 @@ def create_spectrograms(overlap=False):
         # audio_data = audio_data.astype(float)
         # if len(audio_data.shape) > 1:
         #     audio_data = audio_data.mean(axis=1)
-        mel_specto = librosa.stft(y=audio_data)
-        # S_dB = librosa.power_to_db(mel_specto, ref=np.max)
+        # mel_specto = librosa.stft(y=audio_data)
+        mel_specto = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
+        S_dB = librosa.power_to_db(mel_specto)
         # S_dB = ((-80.0 - S_dB) / -80.0) * 255
         # S_dB = S_dB.astype(np.uint8)
         # spec_im = S_dB.astype(np.uint8)
         # print(mel_specto.shape)
         # print(S_dB.shape)
+        print('max: ', np.max(S_dB), ' min: ', np.min(S_dB))
         track_id = track_path[-10:-4]
         if not overlap:
-            for i, partition in enumerate(np.split(mel_specto, [x for x in range(128, mel_specto.shape[1], 128)], axis=1)):
+            for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[1], 128)], axis=1)):
                 if partition.shape[1] == 128:
-                    im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.npy')
-                    np.save(im_save_path, partition)
+                    im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.tif')
+                    imwrite(im_save_path, partition)
                     # imwrite(im_save_path, partition)
                     spec_paths.append(im_save_path)
                     split_genres_ids.append(genre_id)
         else:
             # 0.25 overlap ==> 32 pixels overlap
-            for i, partition in enumerate([mel_specto[:, j: j + 128] for j in range(0, mel_specto.shape[1] - 128, 96)]):
+            for i, partition in enumerate([S_dB[:, j: j + 128] for j in range(0, S_dB.shape[1] - 128, 96)]):
                 Path(OVERLAP_SPECS_OUTPUT_DIR).mkdir(exist_ok=True)
                 if i < 10:
                     num = '0' + str(i)
                 else:
                     num = str(i)
-                im_save_path = os.path.join(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.npy')
-                np.save(im_save_path, partition)
+                im_save_path = os.path.join(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.tif')
+                imwrite(im_save_path, partition)
                 # imwrite(im_save_path, partition)
                 spec_paths.append(im_save_path)
                 split_genres_ids.append(genre_id)
@@ -177,6 +179,15 @@ def create_spectrograms(overlap=False):
 
     with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
         pickle.dump(split_genres_ids, f2)
+
+
+# def research():
+#     with open(OVERLAP_SPECS_OUTPUT_DIR, 'rb') as fd:
+#         spec_paths = pickle.load(fd)
+#     for spec_path in spec_paths:
+#         spec = imread(spec_path)
+#         print()
+
 
 
 def load_genre(genre_id):

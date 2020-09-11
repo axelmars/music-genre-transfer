@@ -7,6 +7,9 @@ default_config = dict(
 	n_adain_layers=4,
 	adain_dim=256,
 
+	min_level_db=-80.0,
+	max_level_db=43,
+
 	perceptual_loss=dict(
 		layers=[2, 5, 8, 13, 18],
 		weights=[1, 1, 1, 1, 1],
