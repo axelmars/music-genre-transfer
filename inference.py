@@ -50,6 +50,7 @@ class Inferer:
         print('sample_paths shape: ', sample_paths.shape)
         sample_paths_0 = sample_paths[sample_genres == 0]
         sample_paths_1 = sample_paths[sample_genres == 1]
+        print('sample_paths_1 shape: ', sample_paths_1.shape)
         sample_paths_0 = sample_paths_0[np.random.choice(sample_paths_0.shape[0], size=self.__num_samples, replace=False)]
         print('sample_paths_0 shape: ', sample_paths_0.shape)
         sample_paths_1 = sample_paths_1[np.random.choice(sample_paths_1.shape[0], size=self.__num_samples, replace=False)]
