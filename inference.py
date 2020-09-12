@@ -11,6 +11,8 @@ from model.network import Converter
 from pathlib import Path
 
 SAMPLE_RATE = 22050
+CLASS_1_ID = 10
+CLASS_2_ID = 5
 
 
 class Inferer:
@@ -73,7 +75,7 @@ class Inferer:
                     dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
                     dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
                     try:
-                        Path(self.__base_dir + '/samples/genre_transform').mkdir(parents=True)
+                        Path(self.__base_dir + '/samples/genre_transform_5').mkdir(parents=True)
                     except FileExistsError:
                         pass
                     if not self.__overlap:
@@ -88,13 +90,13 @@ class Inferer:
                             for k in range(13)
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
-                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'),
+                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'),
                             (full_spec * 255).astype(np.uint8))
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
                 try:
-                    Path(self.__base_dir + '/samples/identity_transform').mkdir(parents=True)
+                    Path(self.__base_dir + '/samples/identity_transform_5').mkdir(parents=True)
                 except FileExistsError:
                     pass
                 if not self.__overlap:
@@ -110,7 +112,7 @@ class Inferer:
                     ]
                     print('length converted_imgs: ', len(converted_imgs))
                     full_spec = self._concatenate_overlap(converted_imgs)
-                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform', 'out-' + img_name[:-5] + '.png'), (full_spec * 255).astype(np.uint8))
+                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', 'out-' + img_name[:-5] + '.png'), (full_spec * 255).astype(np.uint8))
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
@@ -123,7 +125,7 @@ class Inferer:
         full_spec[:, : 2 * 128 - 32] = merge
         print('length imgs: ', len(imgs))
         for i, img in zip(range((128 - 32) * 2, 1280 - 128 + 1, 96), imgs[2:]):
-            print(i)
+            # print(i)
             first_in_pair = np.concatenate((last_img, np.zeros((128, 96))), axis=1)
             second_in_pair = np.concatenate((np.zeros((128, 96)), img), axis=1)
             merge = (1 - mask) * first_in_pair + mask * second_in_pair
@@ -147,7 +149,7 @@ class Inferer:
 
     def _combine_overlapping_specs(self, sample_path):
         img_name = re.search(r'\d+\.png', sample_path).group(0)
-        img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_overlap', img_name)
+        img_path = os.path.join(self.__dataset_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
         full_img = []
         for j in range(13):
             if j < 10:
