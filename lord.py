@@ -98,6 +98,8 @@ def train(args):
 
 	identities[identities == 10] = 0
 	identities[identities == 5] = 1
+
+	print('================= ', np.count_nonzero(identities == 1))
 	imgs = (imgs - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
 	# imgs = imgs / 255.0
 
