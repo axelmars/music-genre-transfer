@@ -39,8 +39,8 @@ class Inferer:
 
         genre_ids = np.array(genre_ids)
         spec_paths = np.array(spec_paths)
-        genre_ids[genre_ids == 18] = 1
-        genre_ids[genre_ids == 10] = 0
+        genre_ids[genre_ids == CLASS_2_ID] = 1
+        genre_ids[genre_ids == CLASS_1_ID] = 0
         if not self.__include_encoders:
             indices = np.load(os.path.join(self.__base_dir, 'bin/train_idx.npy'))
         else:
