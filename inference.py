@@ -92,7 +92,7 @@ class Inferer:
                             for k in range(13)
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
-                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.png'),
+                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.tif'),
                             (full_spec * 255).astype(np.uint8))
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
@@ -114,7 +114,7 @@ class Inferer:
                     ]
                     print('length converted_imgs: ', len(converted_imgs))
                     full_spec = self._concatenate_overlap(converted_imgs)
-                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', 'out-' + img_name[:-5] + '.png'), (full_spec * 255).astype(np.uint8))
+                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', 'out-' + img_name[:-5] + '.tif'), (full_spec * 255).astype(np.uint8))
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
@@ -136,7 +136,7 @@ class Inferer:
         return full_spec
 
     def _combine_specs_to_orig(self, sample_path):
-        img_name = re.search(r'\d+\.png', sample_path).group(0)
+        img_name = re.search(r'\d+\.tif', sample_path).group(0)
         img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_imgs', img_name)
         full_img = []
         for j in range(10):
@@ -150,7 +150,7 @@ class Inferer:
         return np.array(full_img), img_name
 
     def _combine_overlapping_specs(self, sample_path):
-        img_name = re.search(r'\d+\.png', sample_path).group(0)
+        img_name = re.search(r'\d+\.tif', sample_path).group(0)
         img_path = os.path.join(self.__dataset_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
         full_img = []
         for j in range(13):
