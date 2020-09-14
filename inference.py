@@ -168,11 +168,13 @@ class Inferer:
             except FileNotFoundError:
                 print('img not found at ', img_path)
                 break
+            print('normalized: ', full_img)
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
         # spec = (spec * -80.0 + 80.0) * -1
         spec = (default_config['max_level_db'] - default_config['min_level_db']) * spec + default_config['min_level_db']
+        print('denormalized: ', spec)
         spec = librosa.feature.inverse.db_to_power(spec)
         S = librosa.feature.inverse.mel_to_stft(spec)
         print('starting griffin-lim...')
@@ -180,9 +182,9 @@ class Inferer:
         print('griffin-lim done.')
 
         if genre_transform:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_transform', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
         else:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_transform', str(i) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', str(i) + '.wav'), SAMPLE_RATE, audio)
 
 
 def binomial_mask(a=1, x=1, im_shape=(128, 128)):
