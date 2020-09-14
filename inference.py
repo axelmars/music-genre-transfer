@@ -120,13 +120,12 @@ class Inferer:
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
-        print('dtype: ', imgs.dtype)
         mask = binomial_mask()
         first_in_pair = np.concatenate((imgs[0], np.zeros((128, 96))), axis=1)
         second_in_pair = np.concatenate((np.zeros((128, 96)), imgs[1]), axis=1)
         merge = (1 - mask) * first_in_pair + mask * second_in_pair
         last_img = merge[:, -128:]
-        full_spec = np.zeros((128, 1280))
+        full_spec = np.zeros((128, 1280), dtype=np.float32)
         full_spec[:, : 2 * 128 - 32] = merge
         print('length imgs: ', len(imgs))
         for i, img in zip(range((128 - 32) * 2, 1280 - 128 + 1, 96), imgs[2:]):
