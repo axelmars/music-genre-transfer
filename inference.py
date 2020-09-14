@@ -120,6 +120,7 @@ class Inferer:
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
+        print('dtype: ', imgs.dtype)
         mask = binomial_mask()
         first_in_pair = np.concatenate((imgs[0], np.zeros((128, 96))), axis=1)
         second_in_pair = np.concatenate((np.zeros((128, 96)), imgs[1]), axis=1)
@@ -168,7 +169,7 @@ class Inferer:
             except FileNotFoundError:
                 print('img not found at ', img_path)
                 break
-            print('normalized max: ', np.max(full_img), ' min: ', np.min(full_img))
+        print('normalized max: ', np.max(full_img), ' min: ', np.min(full_img))
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
