@@ -188,8 +188,6 @@ def create_spectrograms(overlap=False):
 #         spec = imread(spec_path)
 #         print()
 
-
-
 def load_genre(genre_id):
     with open('spec_paths.pkl', 'rb') as f1:
         spec_paths = pickle.load(f1)
@@ -228,6 +226,9 @@ def convert_mp3_to_wav():
 
 
 if __name__ == '__main__':
-    # convert_mp3_to_wav()
+    # track_paths, genre_ids = list_tracks()
+    # for iden in genre_ids:
+    #     print(iden)
+    convert_mp3_to_wav()
     create_spectrograms(overlap=True)
     # load_genre(CLASS_2_ID)

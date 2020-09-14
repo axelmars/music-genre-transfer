@@ -7,15 +7,17 @@ import subprocess
 import pandas as pd
 import ast
 from sklearn.preprocessing import MultiLabelBinarizer
-import os
+# import os
 from imageio import imread
+import pickle
 import librosa.display
 import librosa.feature
 # from keras.layers import GRU, Input, Embedding, Reshape, Conv1D, Conv2D
 # from keras.models import Model
-from skimage.color import rgb2gray
+# from skimage.color import rgb2gray
 # import tensorflow as tf
-import imageio
+# import imageio
+
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
@@ -174,9 +176,15 @@ if __name__ == '__main__':
     # spec = imread('test2.png')
     # print(rgb2gray(spec).shape)
     # # conv1d_experiment()
-    img = imageio.imread(os.path.join(SPECS_OUTPUT_DIR, '0051785.png'))
-    print(img)
-    img = img.astype(np.float32)
-    print(img)
-    img /= 255.0
-    print(img)
+    # img = imageio.imread(os.path.join(SPECS_OUTPUT_DIR, '0051785.png'))
+    # print(img)
+    # img = img.astype(np.float32)
+    # print(img)
+    # img /= 255.0
+    # print(img)
+    with open('genre_ids-10-5.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
+
+    for iden in genre_ids:
+        print(iden)
+
