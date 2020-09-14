@@ -168,14 +168,14 @@ class Inferer:
             except FileNotFoundError:
                 print('img not found at ', img_path)
                 break
-            # print('normalized: ', full_img)
+            print('normalized max: ', np.max(full_img), ' min: ', np.min(full_img))
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
         # spec = (spec * -80.0 + 80.0) * -1
         spec = (default_config['max_level_db'] - default_config['min_level_db']) * spec + default_config['min_level_db']
-        print('max: ', np.max(spec), ' min: ', np.min(spec))
-        print('denormalized: ', spec)
+        print('denormalized max: ', np.max(spec), ' min: ', np.min(spec))
+        # print('denormalized: ', spec)
         spec = librosa.feature.inverse.db_to_power(spec)
         S = librosa.feature.inverse.mel_to_stft(spec)
         print('starting griffin-lim...')
