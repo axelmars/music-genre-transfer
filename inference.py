@@ -5,6 +5,7 @@ import pickle
 from imageio import imread, imwrite
 import re
 import librosa
+from config import default_config
 from scipy.io import wavfile
 # from model import evaluation
 from model.network import Converter
@@ -93,7 +94,7 @@ class Inferer:
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
                     imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.tif'),
-                            (full_spec * 255).astype(np.uint8))
+                            full_spec)
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
@@ -114,7 +115,8 @@ class Inferer:
                     ]
                     print('length converted_imgs: ', len(converted_imgs))
                     full_spec = self._concatenate_overlap(converted_imgs)
-                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', 'out-' + img_name[:-5] + '.tif'), (full_spec * 255).astype(np.uint8))
+
+                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', 'out-' + img_name[:-5] + '.tif'), full_spec)
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
@@ -160,7 +162,8 @@ class Inferer:
                 num = str(j)
             try:
                 curr_path = img_path[:-6] + num + img_path[-4:]
-                img = imread(curr_path).T[:, :, None].astype(np.float32) / 255.0
+                # img = imread(curr_path).T[:, :, None].astype(np.float32) / 255.0
+                img = (imread(curr_path).T[:, :, None] - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
                 full_img.append(img)
             except FileNotFoundError:
                 print('img not found at ', img_path)
@@ -168,7 +171,8 @@ class Inferer:
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
-        spec = (spec * -80.0 + 80.0) * -1
+        # spec = (spec * -80.0 + 80.0) * -1
+        spec = (default_config['max_level_db'] - default_config['min_level_db']) * spec + default_config['min_level_db']
         spec = librosa.feature.inverse.db_to_power(spec)
         S = librosa.feature.inverse.mel_to_stft(spec)
         print('starting griffin-lim...')
