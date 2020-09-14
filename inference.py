@@ -168,7 +168,7 @@ class Inferer:
             except FileNotFoundError:
                 print('img not found at ', img_path)
                 break
-            print('normalized: ', full_img)
+            # print('normalized: ', full_img)
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
