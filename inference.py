@@ -174,6 +174,7 @@ class Inferer:
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
         # spec = (spec * -80.0 + 80.0) * -1
         spec = (default_config['max_level_db'] - default_config['min_level_db']) * spec + default_config['min_level_db']
+        print('max: ', np.max(spec), ' min: ', np.min(spec))
         print('denormalized: ', spec)
         spec = librosa.feature.inverse.db_to_power(spec)
         S = librosa.feature.inverse.mel_to_stft(spec)
