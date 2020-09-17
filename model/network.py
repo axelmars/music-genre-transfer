@@ -323,7 +323,7 @@ class Converter:
 	def __build_pose_encoder(cls, img_shape, pose_dim, pose_std, pose_decay):
 		img = Input(shape=img_shape)
 
-		x = Conv2D(filters=64, kernel_size=(14, 14), strides=(2, 2), padding='same')(img)
+		x = Conv2D(filters=64, kernel_size=(14, 14), strides=(1, 1), padding='same')(img)
 		x = LeakyReLU()(x)
 
 		x = Conv2D(filters=64, kernel_size=(7, 7), strides=(1, 1), padding='same')(x)
