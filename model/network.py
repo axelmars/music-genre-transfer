@@ -341,6 +341,8 @@ class Converter:
 		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
+		x = Flatten()(x)
+
 		for i in range(2):
 			x = Dense(units=512)(x)
 			x = LeakyReLU()(x)
