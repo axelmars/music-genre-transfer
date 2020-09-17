@@ -280,13 +280,13 @@ class Converter:
 
 			x = AdaptiveInstanceNormalization(adain_layer_idx=i)([x, identity_adain_params])
 
-		x = Conv2D(filters=128, kernel_size=(5, 5), padding='same')(x)
+		x = Conv2D(filters=64, kernel_size=(5, 5), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=64, kernel_size=(7, 7), padding='same')(x)
-		x = LeakyReLU()(x)
+		# x = Conv2D(filters=64, kernel_size=(7, 7), padding='same')(x)
+		# x = LeakyReLU()(x)
 
-		x = Conv2D(filters=img_shape[-1], kernel_size=(14, 14), padding='same')(x)
+		x = Conv2D(filters=img_shape[-1], kernel_size=(7, 7), padding='same')(x)
 		target_img = Activation('sigmoid')(x)
 
 		model = Model(inputs=[pose_code, identity_adain_params], outputs=target_img, name='generator')
@@ -323,9 +323,6 @@ class Converter:
 	def __build_pose_encoder(cls, img_shape, pose_dim, pose_std, pose_decay):
 		img = Input(shape=img_shape)
 
-		x = Conv2D(filters=64, kernel_size=(14, 14), strides=(1, 1), padding='same')(img)
-		x = LeakyReLU()(x)
-
 		x = Conv2D(filters=64, kernel_size=(7, 7), strides=(1, 1), padding='same')(x)
 		x = LeakyReLU()(x)
 
@@ -335,17 +332,17 @@ class Converter:
 		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-
-		x = Flatten()(x)
+		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = LeakyReLU()(x)
 
 		for i in range(2):
-			x = Dense(units=256)(x)
+			x = Dense(units=512)(x)
 			x = LeakyReLU()(x)
 
 		pose_code = Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay))(x)
