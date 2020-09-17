@@ -280,7 +280,7 @@ class Converter:
 
 			x = AdaptiveInstanceNormalization(adain_layer_idx=i)([x, identity_adain_params])
 
-		x = Conv2D(filters=64, kernel_size=(5, 5), padding='same')(x)
+		x = Conv2D(filters=128, kernel_size=(5, 5), padding='same')(x)
 		x = LeakyReLU()(x)
 
 		x = Conv2D(filters=64, kernel_size=(7, 7), padding='same')(x)
