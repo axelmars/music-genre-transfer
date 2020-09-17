@@ -226,9 +226,9 @@ def convert_mp3_to_wav():
 
 
 if __name__ == '__main__':
-    # track_paths, genre_ids = list_tracks()
+    track_paths, genre_ids = list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    convert_mp3_to_wav()
-    create_spectrograms(overlap=True)
+    # convert_mp3_to_wav()
+    # create_spectrograms(overlap=True)
     # load_genre(CLASS_2_ID)
