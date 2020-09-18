@@ -4,7 +4,7 @@ default_config = dict(
 	pose_std=0,
 	pose_decay=0,
 
-	n_adain_layers=4,
+	n_adain_layers=5,
 	adain_dim=256,
 
 	min_level_db=-80.0,

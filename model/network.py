@@ -275,7 +275,7 @@ class Converter:
 
 		for i in range(n_adain_layers):
 			x = UpSampling2D(size=(2, 2))(x)
-			x = Conv2D(filters=adain_dim, kernel_size=(3, 3), padding='same')(x)
+			x = Conv2D(filters=adain_dim, kernel_size=(6, 6), padding='same')(x)
 			x = LeakyReLU()(x)
 
 			x = AdaptiveInstanceNormalization(adain_layer_idx=i)([x, identity_adain_params])
@@ -323,28 +323,28 @@ class Converter:
 	def __build_pose_encoder(cls, img_shape, pose_dim, pose_std, pose_decay):
 		img = Input(shape=img_shape)
 
-		x = Conv2D(filters=64, kernel_size=(7, 7), strides=(1, 1), padding='same')(img)
+		x = Conv2D(filters=64, kernel_size=(32, 32), strides=(1, 1), padding='same')(img)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=128, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=128, kernel_size=(8, 8), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(8, 8), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(8, 8), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(8, 8), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
-		x = Conv2D(filters=512, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(8, 8), strides=(2, 2), padding='same')(x)
 		x = LeakyReLU()(x)
 
 		x = Flatten()(x)
 
 		for i in range(2):
-			x = Dense(units=512)(x)
+			x = Dense(units=256)(x)
 			x = LeakyReLU()(x)
 
 		pose_code = Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay))(x)
