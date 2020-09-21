@@ -265,12 +265,15 @@ class Converter:
 
 		print('======================= Before Dense =======================')
 
-		x = Dense(units=(initial_height // 8) * initial_width * (adain_dim // 8))(pose_code)
+		print('Dense 0')
+		x = Dense(units=(initial_height // 16) * initial_width * (adain_dim // 8))(pose_code)
 		x = LeakyReLU()(x)
 
-		x = Dense(units=(initial_height // 4) * initial_width * (adain_dim // 4))(x)
+		print('Dense 1')
+		x = Dense(units=(initial_height // 8) * initial_width * (adain_dim // 4))(x)
 		x = LeakyReLU()(x)
 
+		print('Dense 2')
 		x = Dense(units=initial_height * initial_width * adain_dim)(x)
 		x = LeakyReLU()(x)
 
