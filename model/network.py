@@ -263,6 +263,8 @@ class Converter:
 		initial_height = img_shape[0]
 		initial_width = img_shape[1] // (2 ** n_adain_layers)
 
+		print('======================= Before Dense =======================')
+
 		x = Dense(units=initial_height * initial_width * (adain_dim // 8))(pose_code)
 		x = LeakyReLU()(x)
 
@@ -271,6 +273,8 @@ class Converter:
 
 		x = Dense(units=initial_height * initial_width * adain_dim)(x)
 		x = LeakyReLU()(x)
+
+		print('========================== After Dense =====================')
 
 		x = Reshape(target_shape=(img_shape[0], initial_width, 1, adain_dim))(x)
 
