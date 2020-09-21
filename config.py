@@ -17,7 +17,7 @@ default_config = dict(
 	),
 
 	train=dict(
-		batch_size=52,
+		batch_size=26,
 		n_epochs=1000
 	),
 
