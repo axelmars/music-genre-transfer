@@ -281,10 +281,10 @@ class Converter:
 
 			x = AdaptiveInstanceNormalization(adain_layer_idx=i)([x, identity_adain_params])
 
-		x = ConvLSTM2D(filters=64, kernel_size=(5, 1), padding='same')(x)
+		x = ConvLSTM2D(filters=64, kernel_size=(5, 1), padding='same', return_sequences=True)(x)
 		x = LeakyReLU()(x)
 
-		x = ConvLSTM2D(filters=img_shape[-1], kernel_size=(7, 1), padding='same')(x)
+		x = ConvLSTM2D(filters=img_shape[-1], kernel_size=(7, 1), padding='same', return_sequences=True)(x)
 		target_img = Activation('sigmoid')(x)
 
 		target_img = Reshape(target_shape=img_shape)(target_img)
