@@ -8,7 +8,7 @@ import tensorflow as tf
 from keras import backend as K
 from keras import optimizers, losses, regularizers
 from keras.layers import Conv2D, Dense, UpSampling2D, LeakyReLU, Activation
-from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise, TimeDistributed, ConvLSTM2D
+from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise
 from keras.models import Model, load_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
@@ -259,43 +259,35 @@ class Converter:
 		pose_code = Input(shape=(pose_dim, ))
 		identity_adain_params = Input(shape=(n_adain_layers, adain_dim, 2))
 
-		# initial_height = img_shape[0] // (2 ** n_adain_layers)
-		initial_height = img_shape[0]
+		initial_height = img_shape[0] // (2 ** n_adain_layers)
 		initial_width = img_shape[1] // (2 ** n_adain_layers)
 
-		print('======================= Before Dense =======================')
-
-		print('Dense 0')
-		x = Dense(units=(initial_height // 64) * initial_width * (adain_dim // 8))(pose_code)
+		x = Dense(units=initial_height * initial_width * (adain_dim // 8))(pose_code)
 		x = LeakyReLU()(x)
 
-		print('Dense 1')
-		x = Dense(units=(initial_height // 64) * initial_width * (adain_dim // 4))(x)
+		x = Dense(units=initial_height * initial_width * (adain_dim // 4))(x)
 		x = LeakyReLU()(x)
 
-		print('Dense 2')
 		x = Dense(units=initial_height * initial_width * adain_dim)(x)
 		x = LeakyReLU()(x)
 
-		print('========================== After Dense =====================')
-
-		x = Reshape(target_shape=(img_shape[0], initial_width, 1, adain_dim))(x)
+		x = Reshape(target_shape=(initial_height, initial_width, adain_dim))(x)
 
 		for i in range(n_adain_layers):
-			x = TimeDistributed(UpSampling2D(size=(2, 1)))(x)
-			x = ConvLSTM2D(filters=adain_dim, kernel_size=(3, 1), padding='same', return_sequences=True)(x)
-			# x = LeakyReLU()(x)
-			# x = GRU(units=512, return_sequences=True)(x)
+			x = UpSampling2D(size=(2, 2))(x)
+			x = Conv2D(filters=adain_dim, kernel_size=(3, 3), padding='same')(x)
+			x = LeakyReLU()(x)
 
 			x = AdaptiveInstanceNormalization(adain_layer_idx=i)([x, identity_adain_params])
 
-		x = ConvLSTM2D(filters=64, kernel_size=(5, 1), padding='same', return_sequences=True)(x)
+		x = Conv2D(filters=64, kernel_size=(5, 5), padding='same')(x)
+		x = LeakyReLU()(x)
+
+		# x = Conv2D(filters=64, kernel_size=(7, 7), padding='same')(x)
 		# x = LeakyReLU()(x)
 
-		x = ConvLSTM2D(filters=img_shape[-1], kernel_size=(7, 1), padding='same', return_sequences=True)(x)
+		x = Conv2D(filters=img_shape[-1], kernel_size=(7, 7), padding='same')(x)
 		target_img = Activation('sigmoid')(x)
-
-		target_img = Reshape(target_shape=img_shape)(target_img)
 
 		model = Model(inputs=[pose_code, identity_adain_params], outputs=target_img, name='generator')
 
@@ -329,56 +321,27 @@ class Converter:
 
 	@classmethod
 	def __build_pose_encoder(cls, img_shape, pose_dim, pose_std, pose_decay):
-		img_width = img_shape[1]
-		img_height = img_shape[0]
-		num_channels = img_shape[2]
-
 		img = Input(shape=img_shape)
 
-		x = Reshape(target_shape=(img_height, img_width, 1, num_channels))(img)
-		# img = np.expand_dims(img)
+		x = Conv2D(filters=64, kernel_size=(7, 7), strides=(1, 1), padding='same')(img)
+		x = LeakyReLU()(x)
 
-		# x = TimeDistributed(Conv2D(filters=64, kernel_size=(1, 7), strides=(1, 1), padding='same'))(img)
-		# x = LeakyReLU()(x)
-		# x = TimeDistributed(Flatten())(x)
-		x = ConvLSTM2D(filters=64, kernel_size=(7, 1), strides=(1, 1), return_sequences=True, padding='same')(x)
+		x = Conv2D(filters=128, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = LeakyReLU()(x)
 
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], -1, 64))(x)
-		# x = Conv2D(filters=128, kernel_size=(1, 4), strides=(1, 2), padding='same')(x)
-		# x = LeakyReLU()(x)
-		# x_shape = tf.shape(x)
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], tf.reduce_prod(img_shape[2:])))(x)
-		# x = GRU(units=1024, return_sequences=True)(x)
-		x = ConvLSTM2D(filters=128, kernel_size=(4, 1), strides=(2, 1), return_sequences=True, padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = LeakyReLU()(x)
 
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], -1, 128))(x)
-		# x = Conv2D(filters=256, kernel_size=(1, 4), strides=(1, 2), padding='same')(x)
-		# x = LeakyReLU()(x)
-		# x_shape = tf.shape(x)
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], tf.reduce_prod(img_shape[2:])))(x)
-		# x = GRU(units=512, return_sequences=True)(x)
-		x = ConvLSTM2D(filters=256, kernel_size=(4, 1), strides=(2, 1), return_sequences=True, padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = LeakyReLU()(x)
 
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], -1, 256))(x)
-		# x = Conv2D(filters=256, kernel_size=(1, 4), strides=(1, 2), padding='same')(x)
-		# x = LeakyReLU()(x)
-		# x_shape = tf.shape(x)
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], tf.reduce_prod(img_shape[2:])))(x)
-		# x = GRU(units=512, return_sequences=True)(x)
-		x = ConvLSTM2D(filters=256, kernel_size=(4, 1), strides=(2, 1), return_sequences=True, padding='same')(x)
-
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], -1, 256))(x)
-		# x = Conv2D(filters=256, kernel_size=(1, 4), strides=(1, 2), padding='same')(x)
-		# x = LeakyReLU()(x)
-		# x_shape = tf.shape(x)
-		# x = Reshape(target_shape=(x_shape[0], x_shape[1], tf.reduce_prod(img_shape[2:])))(x)
-		# x = GRU(units=512, return_sequences=True)(x)
-		x = ConvLSTM2D(filters=256, kernel_size=(4, 1), strides=(2, 1), return_sequences=True, padding='same')(x)
+		x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+		x = LeakyReLU()(x)
 
 		x = Flatten()(x)
 
 		for i in range(2):
-			x = Dense(units=512)(x)
+			x = Dense(units=256)(x)
 			x = LeakyReLU()(x)
 
 		pose_code = Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay))(x)
@@ -440,8 +403,8 @@ class AdaptiveInstanceNormalization(Layer):
 		adain_scale = adain_params[:, self.adain_layer_idx, :, 1]
 
 		adain_dim = x.shape[-1]
-		adain_offset = K.reshape(adain_offset, (-1, 1, 1, 1, adain_dim))
-		adain_scale = K.reshape(adain_scale, (-1, 1, 1, 1, adain_dim))
+		adain_offset = K.reshape(adain_offset, (-1, 1, 1, adain_dim))
+		adain_scale = K.reshape(adain_scale, (-1, 1, 1, adain_dim))
 
 		mean, var = tf.nn.moments(x, axes=[1, 2], keepdims=True)
 		x_standard = (x - mean) / (tf.sqrt(var) + 1e-7)
