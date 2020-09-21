@@ -259,8 +259,8 @@ class Converter:
 		pose_code = Input(shape=(pose_dim, ))
 		identity_adain_params = Input(shape=(n_adain_layers, adain_dim, 2))
 
-		initial_height = img_shape[0] // (2 ** n_adain_layers)
-		# initial_height = img_shape[0]
+		# initial_height = img_shape[0] // (2 ** n_adain_layers)
+		initial_height = img_shape[0]
 		initial_width = img_shape[1] // (2 ** n_adain_layers)
 
 		print('======================= Before Dense =======================')
