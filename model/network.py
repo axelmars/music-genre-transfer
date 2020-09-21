@@ -370,7 +370,7 @@ class Converter:
 		x = TimeDistributed(Flatten())(x)
 
 		for i in range(2):
-			x = TimeDistributed(Dense(units=512))(x)
+			x = TimeDistributed(Dense(units=256))(x)
 			x = LeakyReLU()(x)
 
 		pose_code = TimeDistributed(Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay)))(x)
