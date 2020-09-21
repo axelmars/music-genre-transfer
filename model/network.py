@@ -287,6 +287,8 @@ class Converter:
 		x = ConvLSTM2D(filters=img_shape[-1], kernel_size=(7, 1), padding='same')(x)
 		target_img = Activation('sigmoid')(x)
 
+		target_img = Reshape(target_shape=img_shape)(target_img)
+
 		model = Model(inputs=[pose_code, identity_adain_params], outputs=target_img, name='generator')
 
 		print('generator arch:')
@@ -319,13 +321,19 @@ class Converter:
 
 	@classmethod
 	def __build_pose_encoder(cls, img_shape, pose_dim, pose_std, pose_decay):
+		img_width = img_shape[1]
+		img_height = img_shape[0]
+		num_channels = img_shape[2]
+
 		img = Input(shape=img_shape)
+
+		x = Reshape(target_shape=(img_height, img_width, 1, num_channels))(img)
 		# img = np.expand_dims(img)
 
 		# x = TimeDistributed(Conv2D(filters=64, kernel_size=(1, 7), strides=(1, 1), padding='same'))(img)
 		# x = LeakyReLU()(x)
 		# x = TimeDistributed(Flatten())(x)
-		x = ConvLSTM2D(filters=64, kernel_size=(7, 1), strides=(1, 1), return_sequences=True, padding='same')(img)
+		x = ConvLSTM2D(filters=64, kernel_size=(7, 1), strides=(1, 1), return_sequences=True, padding='same')(x)
 
 		# x = Reshape(target_shape=(x_shape[0], x_shape[1], -1, 64))(x)
 		# x = Conv2D(filters=128, kernel_size=(1, 4), strides=(1, 2), padding='same')(x)
