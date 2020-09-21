@@ -256,19 +256,20 @@ class Converter:
 
 	@classmethod
 	def __build_generator(cls, pose_dim, n_adain_layers, adain_dim, img_shape):
-		pose_code = Input(shape=(img_shape[0], pose_dim))
+		pose_code = Input(shape=(pose_dim, ))
 		identity_adain_params = Input(shape=(n_adain_layers, adain_dim, 2))
 
 		# initial_height = img_shape[0] // (2 ** n_adain_layers)
+		initial_height = img_shape[0]
 		initial_width = img_shape[1] // (2 ** n_adain_layers)
 
-		x = TimeDistributed(Dense(units=initial_width * (adain_dim // 8)))(pose_code)
+		x = Dense(units=initial_height * initial_width * (adain_dim // 8))(pose_code)
 		x = LeakyReLU()(x)
 
-		x = TimeDistributed(Dense(units=initial_width * (adain_dim // 4)))(x)
+		x = Dense(units=initial_height * initial_width * (adain_dim // 4))(x)
 		x = LeakyReLU()(x)
 
-		x = TimeDistributed(Dense(units=initial_width * adain_dim))(x)
+		x = Dense(units=initial_height * initial_width * adain_dim)(x)
 		x = LeakyReLU()(x)
 
 		x = Reshape(target_shape=(img_shape[0], initial_width, 1, adain_dim))(x)
@@ -367,10 +368,10 @@ class Converter:
 		# x = GRU(units=512, return_sequences=True)(x)
 		x = ConvLSTM2D(filters=256, kernel_size=(4, 1), strides=(2, 1), return_sequences=True, padding='same')(x)
 
-		x = TimeDistributed(Flatten())(x)
+		x = Flatten()(x)
 
 		for i in range(2):
-			x = TimeDistributed(Dense(units=256))(x)
+			x = Dense(units=512)(x)
 			x = LeakyReLU()(x)
 
 		pose_code = TimeDistributed(Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay)))(x)
