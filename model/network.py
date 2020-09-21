@@ -274,9 +274,9 @@ class Converter:
 		x = Reshape(target_shape=(img_shape[0], initial_width, 1, adain_dim))(x)
 
 		for i in range(n_adain_layers):
-			x = UpSampling2D(size=(2, 1))(x)
-			x = ConvLSTM2D(filters=adain_dim, kernel_size=(3, 1), padding='same')(x)
-			x = LeakyReLU()(x)
+			x = TimeDistributed(UpSampling2D(size=(2, 1)))(x)
+			x = ConvLSTM2D(filters=adain_dim, kernel_size=(3, 1), padding='same', return_sequences=True)(x)
+			# x = LeakyReLU()(x)
 			# x = GRU(units=512, return_sequences=True)(x)
 
 			x = AdaptiveInstanceNormalization(adain_layer_idx=i)([x, identity_adain_params])
@@ -370,7 +370,7 @@ class Converter:
 		x = TimeDistributed(Flatten())(x)
 
 		for i in range(2):
-			x = TimeDistributed(Dense(units=256))(x)
+			x = TimeDistributed(Dense(units=512))(x)
 			x = LeakyReLU()(x)
 
 		pose_code = TimeDistributed(Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay)))(x)
