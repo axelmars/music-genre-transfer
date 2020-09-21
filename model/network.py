@@ -271,7 +271,7 @@ class Converter:
 		x = TimeDistributed(Dense(units=initial_width * adain_dim))(x)
 		x = LeakyReLU()(x)
 
-		x = TimeDistributed(Reshape(target_shape=(initial_width, adain_dim)))(x)
+		x = Reshape(target_shape=(img_shape[0], initial_width, 1, adain_dim))(x)
 
 		for i in range(n_adain_layers):
 			x = UpSampling2D(size=(2, 1))(x)
