@@ -432,8 +432,8 @@ class AdaptiveInstanceNormalization(Layer):
 		adain_scale = adain_params[:, self.adain_layer_idx, :, 1]
 
 		adain_dim = x.shape[-1]
-		adain_offset = K.reshape(adain_offset, (-1, 1, 1, adain_dim))
-		adain_scale = K.reshape(adain_scale, (-1, 1, 1, adain_dim))
+		adain_offset = K.reshape(adain_offset, (-1, 1, 1, 1, adain_dim))
+		adain_scale = K.reshape(adain_scale, (-1, 1, 1, 1, adain_dim))
 
 		mean, var = tf.nn.moments(x, axes=[1, 2], keepdims=True)
 		x_standard = (x - mean) / (tf.sqrt(var) + 1e-7)
