@@ -256,10 +256,10 @@ class Converter:
 
 	@classmethod
 	def __build_generator(cls, pose_dim, n_adain_layers, adain_dim, img_shape):
-		pose_code = Input(shape=(pose_dim, ))
+		pose_code = Input(shape=(img_shape[0], pose_dim))
 		identity_adain_params = Input(shape=(n_adain_layers, adain_dim, 2))
 
-		initial_height = img_shape[0] // (2 ** n_adain_layers)
+		# initial_height = img_shape[0] // (2 ** n_adain_layers)
 		initial_width = img_shape[1] // (2 ** n_adain_layers)
 
 		x = TimeDistributed(Dense(units=initial_width * (adain_dim // 8)))(pose_code)
