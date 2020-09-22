@@ -9,6 +9,7 @@ import ast
 import pickle
 from imageio import imwrite, imread
 from pathlib import Path
+from pydub.exceptions import CouldntDecodeError
 from scipy.io import wavfile
 
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -17,10 +18,10 @@ TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
 TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
-CLASS_1_NAME = 'instrumental'
-CLASS_2_NAME = 'pop'
-CLASS_1_ID = 10
-CLASS_2_ID = 5
+CLASS_1_NAME = 'folk'
+CLASS_2_NAME = 'rock'
+CLASS_1_ID = 17
+CLASS_2_ID = 12
 MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium'
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
@@ -209,14 +210,22 @@ def load_genre(genre_id):
 def convert_mp3_to_wav():
     track_paths, genre_ids = list_tracks()
     wav_file_paths = []
-    AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
+    # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
     AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
     wav_base_path = WAV_OUTPUT_DIR
+    try:
+        Path(WAV_OUTPUT_DIR).mkdir(parents=True)
+    except FileExistsError:
+        pass
+
     for track_path in track_paths:
-        mp3_track = AudioSegment.from_mp3(track_path)  # is it mono?
-        wav_file_path = os.path.join(wav_base_path, track_path[-10:-4] + '.wav')
-        mp3_track.export(wav_file_path, format='wav')  # save wav file to separate directory
-        wav_file_paths.append(wav_file_path)
+        try:
+            mp3_track = AudioSegment.from_mp3(track_path)  # is it mono?
+            wav_file_path = os.path.join(wav_base_path, track_path[-10:-4] + '.wav')
+            mp3_track.export(wav_file_path, format='wav')  # save wav file to separate directory
+            wav_file_paths.append(wav_file_path)
+        except CouldntDecodeError:
+            print('Couldn\'t decode ', track_path)
 
     with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f1:
         pickle.dump(wav_file_paths, f1)
@@ -226,9 +235,9 @@ def convert_mp3_to_wav():
 
 
 if __name__ == '__main__':
-    track_paths, genre_ids = list_tracks()
+    # track_paths, genre_ids = list_tracks()
     # for iden in genre_ids:
     #     print(iden)
     # convert_mp3_to_wav()
-    # create_spectrograms(overlap=True)
+    create_spectrograms(overlap=True)
     # load_genre(CLASS_2_ID)

@@ -24,8 +24,8 @@ TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
 CLASS_1_NAME = 'orchestral'
 CLASS_2_NAME = 'pop'
-CLASS_1_ID = 10
-CLASS_2_ID = 5
+CLASS_1_ID = 17
+CLASS_2_ID = 12
 
 supported_datasets = [
 	'mnist',
@@ -386,7 +386,7 @@ class SimpleFMA(DataSet):
 
 		img_paths = []
 
-		for spec_path in spec_paths:
+		for spec_path in sorted(spec_paths):
 
 			img_name = re.search(r'\d+\.tif', spec_path).group(0)
 			img_path = os.path.join(self._base_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
