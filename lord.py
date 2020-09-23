@@ -54,7 +54,7 @@ def split_samples(args):
 
 	n_identities = np.unique(identities).size
 
-	with open(os.path.join(args.base_dir, 'bin', 'spec_paths-10-5.pkl'), 'rb') as f1:
+	with open(os.path.join(args.base_dir, 'bin', 'spec_paths-17-12.pkl'), 'rb') as f1:
 		spec_paths = np.array(pickle.load(f1))
 
 	print('spec_paths shape: ', spec_paths.shape)
