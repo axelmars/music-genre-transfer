@@ -103,6 +103,13 @@ def train(args):
 	imgs = (imgs - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
 	# imgs = imgs / 255.0
 
+	# shuffle the images
+	idx = np.arange(imgs.shape[0])
+	np.random.shuffle(idx)
+	imgs = imgs[idx]
+	identities = identities[idx]
+	poses = identities[idx]
+
 	converter = Converter.build(
 		img_shape=imgs.shape[1:],
 		n_imgs=imgs.shape[0],
