@@ -112,8 +112,8 @@ class Converter:
 		self.generator = generator
 		self.identity_encoder = identity_encoder
 
-		self.vgg = None
-		# self.vgg = self.__build_vgg()
+		# self.vgg = None
+		self.vgg = self.__build_vgg()
 
 	def train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
 		img = Input(shape=self.config.img_shape)
@@ -140,8 +140,8 @@ class Converter:
 		# )
 		model.compile(
 			optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
-			loss=self.__l1_and_l2_loss
-			# loss=self.__perceptual_loss_multiscale
+			# loss=self.__l1_and_l2_loss
+			loss=self.__perceptual_loss_multiscale
 		)
 		lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
 		# lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
