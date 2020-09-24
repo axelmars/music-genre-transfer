@@ -12,8 +12,8 @@ from model.network import Converter
 from pathlib import Path
 
 SAMPLE_RATE = 22050
-CLASS_1_ID = 10
-CLASS_2_ID = 5
+CLASS_1_ID = 17
+CLASS_2_ID = 12
 
 
 class Inferer:
