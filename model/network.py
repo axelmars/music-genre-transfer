@@ -376,7 +376,7 @@ class Converter:
 		x = Flatten()(x)
 
 		for i in range(2):
-			x = Dense(units=512)(x)
+			x = Dense(units=256)(x)
 			x = LeakyReLU()(x)
 
 		identity_code = Dense(units=identity_dim)(x)
