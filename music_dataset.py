@@ -24,6 +24,7 @@ CLASS_1_ID = 17
 CLASS_2_ID = 12
 MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium'
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
+FEATURES_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/features.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
 OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-l'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
@@ -82,6 +83,7 @@ def list_tracks():
     tracks_data = tracks_data.join(pd.DataFrame(mlb.fit_transform(tracks_data.pop(GENRES_COL_NAME)), columns=mlb.classes_, index=tracks_data.index))
     # regex = re.compile('Rafd(\d+)_(\d+)_(\w+)_(\w+)_(\w+)_(\w+).jpg')
     base_dir = MP3_PATH  # '\\' + track_id[:3] + '\\' + track_id + '.mp3'
+    track_ids = ([], [])
     for folder_name in os.listdir(base_dir):
         folder_path = os.path.join(base_dir, folder_name)
         for file_name in os.listdir(folder_path):
@@ -93,11 +95,13 @@ def list_tracks():
                 # genre is soundtrack and not pop
                 track_paths.append(os.path.join(folder_path, file_name))
                 genre_ids.append(CLASS_1_ID)
+                track_ids[0].append(track_id)
                 # print('appending ', CLASS_1_ID)
             elif (tracks_data[tracks_data[TRACK_ID_COL_NAME] == track_id][CLASS_2_ID] == 1).bool() and (tracks_data[tracks_data[TRACK_ID_COL_NAME] == track_id][CLASS_1_ID] == 0).bool():  # if the
                 # genre is pop and bot soundtrack
                 track_paths.append(os.path.join(folder_path, file_name))
                 genre_ids.append(CLASS_2_ID)
+                track_ids[1].append(track_id)
                 # print('appending 5', CLASS_2_ID)
     print(f'num {CLASS_1_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
     print(f'num {CLASS_2_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_2_ID)))
@@ -116,7 +120,7 @@ def list_tracks():
         #     identity_ids.append(identity_id)
         #
         # return img_paths, identity_ids
-    return track_paths, genre_ids
+    return track_paths, genre_ids, track_ids
 
 
 def create_spectrograms(overlap=False):
@@ -208,7 +212,7 @@ def load_genre(genre_id):
 
 
 def convert_mp3_to_wav():
-    track_paths, genre_ids = list_tracks()
+    track_paths, genre_ids, track_ids = list_tracks()
     wav_file_paths = []
     # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
     AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
@@ -234,10 +238,17 @@ def convert_mp3_to_wav():
         pickle.dump(genre_ids, f2)
 
 
+def create_clustered_subgenres():
+    track_paths, genre_ids, track_ids = list_tracks()
+    features_data = pd.read_csv(FEATURES_FMA)
+    print(features_data.columns)
+
+
 if __name__ == '__main__':
     # track_paths, genre_ids = list_tracks()
     # for iden in genre_ids:
     #     print(iden)
     # convert_mp3_to_wav()
-    create_spectrograms(overlap=True)
+    create_clustered_subgenres()
+    # create_spectrograms(overlap=True)
     # load_genre(CLASS_2_ID)
