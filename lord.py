@@ -202,7 +202,7 @@ def main():
 	preprocess_parser.add_argument('-dn', '--data-name', type=str, required=True)
 	preprocess_parser.set_defaults(func=preprocess)
 
-	preprocess_genres_parser = action_parsers.add_parser('preprocess_genres')
+	preprocess_genres_parser = action_parsers.add_parser('preprocess-genres')
 	preprocess_genres_parser.add_argument('-di', '--dataset-id', type=str, choices=dataset.supported_datasets, required=True)
 	preprocess_genres_parser.add_argument('-dp', '--dataset-path', type=str, required=False)
 	preprocess_genres_parser.add_argument('-dn', '--data-name', type=str, required=True)
