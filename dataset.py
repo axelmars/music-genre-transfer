@@ -417,6 +417,32 @@ class SimpleFMA(DataSet):
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
 			img = img.T[:, :, None]
 			imgs[i] = img
-			identities[i] = genre_ids[i]
+			identities[i] = genre_ids[i].astype(np.uint32)
 
 		return imgs, identities, poses
+
+	def read_genres_only(self):
+
+		# img_paths = self.__list_imgs()
+
+		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
+			genre_ids = pickle.load(f2)
+
+		# img_paths, identity_ids = self.__list_imgs()
+
+		# unique_identity_ids = list(set(identity_ids))
+
+		# imgs = np.empty(shape=(len(genre_ids), 128, 128, 1), dtype=np.float32)
+		identities = np.empty(shape=(len(genre_ids), ), dtype=np.uint32)
+		poses = np.zeros(shape=(len(genre_ids), ), dtype=np.uint32)
+
+		for i in range(len(genre_ids)):
+			# img = imageio.imread(img_paths[i])
+			# img = np.load(img_paths[i])
+
+			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
+			# img = img.T[:, :, None]
+			# imgs[i] = img
+			identities[i] = genre_ids[i].astype(np.uint32)
+
+		return identities, poses

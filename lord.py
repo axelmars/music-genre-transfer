@@ -23,6 +23,21 @@ def preprocess(args):
 	)
 
 
+def preprocess_genres_only(args):
+	assets = AssetManager(args.base_dir)
+
+	img_dataset = dataset.get_dataset(args.dataset_id, args.dataset_path)
+	data = np.load(assets.get_preprocess_file_path(args.input_data_name))
+	imgs = data['imgs']
+	identities, poses = img_dataset.read_genres_only()
+	n_identities = np.unique(identities).size
+
+	np.savez(
+		file=assets.get_preprocess_file_path(args.data_name),
+		imgs=imgs, identities=identities, poses=poses, n_identities=n_identities
+	)
+
+
 def split_identities(args):
 	assets = AssetManager(args.base_dir)
 
@@ -96,8 +111,9 @@ def train(args):
 	data = np.load(assets.get_preprocess_file_path(args.data_name))
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 
-	identities[identities == 17] = 0
-	identities[identities == 12] = 1
+	# for identity in np.unique(identities):
+	# 	identities[identities == 17] = 0
+	# identities[identities == 12] = 1
 
 	print('================= ', np.count_nonzero(identities == 1))
 	imgs = (imgs - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
@@ -185,6 +201,13 @@ def main():
 	preprocess_parser.add_argument('-dp', '--dataset-path', type=str, required=False)
 	preprocess_parser.add_argument('-dn', '--data-name', type=str, required=True)
 	preprocess_parser.set_defaults(func=preprocess)
+
+	preprocess_genres_parser = action_parsers.add_parser('preprocess_genres')
+	preprocess_genres_parser.add_argument('-di', '--dataset-id', type=str, choices=dataset.supported_datasets, required=True)
+	preprocess_genres_parser.add_argument('-dp', '--dataset-path', type=str, required=False)
+	preprocess_genres_parser.add_argument('-dn', '--data-name', type=str, required=True)
+	preprocess_genres_parser.add_argument('-idn', '--input-data-name', type=str, required=True)
+	preprocess_genres_parser.set_defaults(func=preprocess_genres_only)
 
 	split_identities_parser = action_parsers.add_parser('split-identities')
 	split_identities_parser.add_argument('-idn', '--input-data-name', type=str, required=True)

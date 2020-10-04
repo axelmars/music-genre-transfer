@@ -11,8 +11,13 @@ from imageio import imwrite, imread
 from pathlib import Path
 from pydub.exceptions import CouldntDecodeError
 from scipy.io import wavfile
-
+from sklearn.cluster import KMeans, OPTICS, SpectralClustering, AffinityPropagation
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
+from hdbscan import HDBSCAN
 from sklearn.preprocessing import MultiLabelBinarizer
+import matplotlib.pyplot as plt
+import time
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
@@ -40,6 +45,28 @@ def safe_parse(x):
 
 # get set of genres
 # get track id's for all songs conforming to the set of genres.
+
+# Print iterations progress
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print()
 
 def get_tracks_ids():
     # genres_data = pd.read_csv('music_metadata/genres.csv')
@@ -83,7 +110,7 @@ def list_tracks():
     tracks_data = tracks_data.join(pd.DataFrame(mlb.fit_transform(tracks_data.pop(GENRES_COL_NAME)), columns=mlb.classes_, index=tracks_data.index))
     # regex = re.compile('Rafd(\d+)_(\d+)_(\w+)_(\w+)_(\w+)_(\w+).jpg')
     base_dir = MP3_PATH  # '\\' + track_id[:3] + '\\' + track_id + '.mp3'
-    track_ids = ([], [])
+    track_ids = []
     for folder_name in os.listdir(base_dir):
         folder_path = os.path.join(base_dir, folder_name)
         for file_name in os.listdir(folder_path):
@@ -95,14 +122,14 @@ def list_tracks():
                 # genre is soundtrack and not pop
                 track_paths.append(os.path.join(folder_path, file_name))
                 genre_ids.append(CLASS_1_ID)
-                track_ids[0].append(track_id)
+                track_ids.append(track_id)
                 # print('appending ', CLASS_1_ID)
             elif (tracks_data[tracks_data[TRACK_ID_COL_NAME] == track_id][CLASS_2_ID] == 1).bool() and (tracks_data[tracks_data[TRACK_ID_COL_NAME] == track_id][CLASS_1_ID] == 0).bool():  # if the
                 # genre is pop and bot soundtrack
                 track_paths.append(os.path.join(folder_path, file_name))
                 genre_ids.append(CLASS_2_ID)
-                track_ids[1].append(track_id)
-                # print('appending 5', CLASS_2_ID)
+                track_ids.append(track_id)
+            # print('appending 5', CLASS_2_ID)
     print(f'num {CLASS_1_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
     print(f'num {CLASS_2_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_2_ID)))
             # if
@@ -186,6 +213,31 @@ def create_spectrograms(overlap=False):
         pickle.dump(split_genres_ids, f2)
 
 
+def create_genres_only(overlap=True):
+    """
+    loads tracks according to given ids and saves their spectrograms.
+    :param tracks_ids:
+    :return:
+    """
+    with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
+        wavfile_paths = pickle.load(f1)
+
+    with open(f'spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
+        spec_paths = pickle.load(f1)
+
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
+
+    split_genres_ids = np.zeros(len(spec_paths))
+    spec_paths = np.array([x[-12:-6] for x in spec_paths])
+    print(spec_paths.shape)
+    for genre_id, wav_path in zip(genre_ids, wavfile_paths):
+        split_genres_ids[spec_paths == wav_path[-10: -4]] = genre_id
+    for genre_id in split_genres_ids:
+        print(genre_id)
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
+        pickle.dump(split_genres_ids, f2)
+
 # def research():
 #     with open(OVERLAP_SPECS_OUTPUT_DIR, 'rb') as fd:
 #         spec_paths = pickle.load(fd)
@@ -212,7 +264,13 @@ def load_genre(genre_id):
 
 
 def convert_mp3_to_wav():
-    track_paths, genre_ids, track_ids = list_tracks()
+    # track_paths, genre_ids, track_ids = list_tracks()
+    with open(f'track_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
+        track_paths = pickle.load(f1)
+
+    # with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+    #     genre_ids = pickle.load(f2)
+
     wav_file_paths = []
     # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
     AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
@@ -234,21 +292,143 @@ def convert_mp3_to_wav():
     with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f1:
         pickle.dump(wav_file_paths, f1)
 
-    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
-        pickle.dump(genre_ids, f2)
+    # with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
+    #     pickle.dump(genre_ids, f2)
 
 
 def create_clustered_subgenres():
     track_paths, genre_ids, track_ids = list_tracks()
     features_data = pd.read_csv(FEATURES_FMA)
-    print(features_data.columns)
+    print(features_data)
+    print('tracks size: ', len(track_ids))
+    # print(features_data['feature'] == 139)
+    # for class_ids in track_ids:
+    features = features_data.loc[features_data['feature'].isin(track_ids)]
+    print(features)
+    existing_track_ids = features['feature']
+    existing_track_ids_idx = np.isin(np.array(track_ids), existing_track_ids)
+    # track_ids = track_ids[existing_track_ids_idx]
+    track_paths = np.array(track_paths)[existing_track_ids_idx]
+    genre_ids = np.array(genre_ids)[existing_track_ids_idx]
+    features = features.iloc[:, 1:]
+
+    print(features)
+
+    with open('features-for-clustering.pkl', 'wb') as f2:
+        pickle.dump(features, f2)
+
+    print('features size: ', features.shape)
+    # print(features['feature'])
+    # labels = HDBSCAN(min_cluster_size=20).fit_predict(X=features)
+    # labels = OPTICS().fit_predict(X=features)
+
+    with open('clustering-genres.pkl', 'wb') as f0:
+        pickle.dump(genre_ids, f0)
+
+    with open(f'track_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
+        pickle.dump(track_paths, f2)
+
+
+def visualise_reduction():
+    with open('features-for-clustering.pkl', 'rb') as f0:
+        features = np.array(pickle.load(f0))
+
+    with open('clustering-genres.pkl', 'rb') as f0:
+        genre_ids = np.array(pickle.load(f0))
+
+    pca_res = PCA(n_components=50).fit_transform(features)
+    tfse_res = TSNE().fit_transform(pca_res)
+    kcolors = ['red' if (genre == CLASS_1_ID) else 'blue' for genre in genre_ids]
+
+    plt.scatter(tfse_res[:, 0], tfse_res[:, 1], c=kcolors, s=2, alpha=0.5)
+    plt.show()
+
+
+def cluster():
+    with open('features-for-clustering.pkl', 'rb') as f0:
+        features = np.array(pickle.load(f0))
+
+    with open('clustering-genres.pkl', 'rb') as f0:
+        genre_ids = np.array(pickle.load(f0))
+
+    genre_ids = np.array(genre_ids)
+    clustered_genres_ids = np.zeros(genre_ids.shape)
+    genre_1_idx = genre_ids == CLASS_1_ID
+    genre_1_labels = KMeans(n_clusters=3).fit_predict(features[genre_1_idx])
+    genre_2_labels = KMeans(n_clusters=3).fit_predict(features[~genre_1_idx])
+    clustered_genres_ids[genre_1_idx] = genre_1_labels
+    clustered_genres_ids[~genre_1_idx] = genre_2_labels + max(genre_1_labels) + 1
+    #
+    # pca_res = PCA(n_components=50).fit_transform(features)
+    # tsne_res = TSNE().fit_transform(pca_res)
+    # print('applying clustering...')
+    # labels = HDBSCAN(min_cluster_size=10).fit_predict(X=tsne_res)
+    #
+    # with open('clustering-labels.pkl', 'wb') as f1:
+    #     pickle.dump(labels, f1)
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
+        pickle.dump(clustered_genres_ids, f2)
+
+
+def finetune_clustering():
+    with open('features-for-clustering.pkl', 'rb') as f0:
+        features = np.array(pickle.load(f0))
+    n_iter = 50
+    max_min_cluster_size = 50
+    score = np.zeros(max_min_cluster_size - 5)
+    pca_res = PCA(n_components=50).fit_transform(features)
+    for i in range(5, max_min_cluster_size):
+        score_iter = np.zeros(n_iter)
+        print('trying with min_cluster_size', i, '...')
+        for j in range(n_iter):
+            print('\t iteration', j)
+            print('\t\t applying TSNE...')
+            tsne_iter = TSNE(n_jobs=-1).fit_transform(pca_res)
+            print('\t\t applying HDBSCAN...')
+            clusterer = HDBSCAN(min_cluster_size=i)
+            clusterer.fit(tsne_iter)
+            score_iter[j] = sum(clusterer.probabilities_ < 0.05) / features.shape[0]
+        score[i-5] = np.mean(score_iter)
+        print('score:', score[i - 5])
+    plt.plot(np.log(score + 1))
+    plt.show()
+    # print('applying clustering...')
+    # labels = HDBSCAN(min_cluster_size=).fit_predict(X=features)
+    #
+    # with open('clustering-labels.pkl', 'wb') as f1:
+    #     pickle.dump(labels, f1)
+
+
+def clustering_analysis():
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
+
+    # with open('clustering-labels.pkl', 'rb') as f1:
+    #     labels = np.array(pickle.load(f1))
+
+    # print(f'num {CLASS_1_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_1_ID)))
+    # print(f'num {CLASS_2_ID}: ', str(np.count_nonzero(np.array(genre_ids) == CLASS_2_ID)))
+    # print(genre_ids)
+    # print((genre_ids == CLASS_1_ID).shape)
+    # print((labels == 1).shape)
+    for genre in np.unique(genre_ids):
+        print('genre', genre, ': ', np.count_nonzero(genre_ids == genre))
+
+    # print(np.count_nonzero((genre_ids == CLASS_1_ID) & (labels == -1)), np.count_nonzero((genre_ids == CLASS_2_ID) & (labels == -1)))
+    # for genre, label in zip(genre_ids, labels):
+    #     print(genre, label)
 
 
 if __name__ == '__main__':
-    # track_paths, genre_ids = list_tracks()
+    # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
+    # create_clustered_subgenres()
+    # visualise_reduction()
+    # finetune_clustering()
+    cluster()
+    clustering_analysis()
     # convert_mp3_to_wav()
-    create_clustered_subgenres()
+    create_genres_only(True)
     # create_spectrograms(overlap=True)
     # load_genre(CLASS_2_ID)
