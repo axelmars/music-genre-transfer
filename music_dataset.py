@@ -12,11 +12,14 @@ from pathlib import Path
 from pydub.exceptions import CouldntDecodeError
 from scipy.io import wavfile
 from sklearn.cluster import KMeans, OPTICS, SpectralClustering, AffinityPropagation
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.manifold import TSNE
+from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
 from sklearn.decomposition import PCA
 from hdbscan import HDBSCAN
 from sklearn.preprocessing import MultiLabelBinarizer
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import time
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
@@ -263,6 +266,22 @@ def load_genre(genre_id):
         pickle.dump(new_spec_paths, f1)
 
 
+def get_pc_eigenvalues():
+    with open('features-for-clustering.pkl', 'rb') as f0:
+        X = np.array(pickle.load(f0))
+
+    n_samples = X.shape[0]
+    pca = PCA()
+    X -= np.mean(X, axis=0)
+    X /= n_samples
+    # X_transform = pca.fit_transform(X)
+    # cov_matrix = np.dot(X.T, X) / n_samples
+    # for eigenvector in pca.components_:
+    #     print(np.dot(eigenvector.T, np.dot(cov_matrix, eigenvector)))
+    for value in pca.explained_variance_ratio_:
+        print(value)
+
+
 def convert_mp3_to_wav():
     # track_paths, genre_ids, track_ids = list_tracks()
     with open(f'track_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
@@ -333,14 +352,15 @@ def visualise_reduction():
     with open('features-for-clustering.pkl', 'rb') as f0:
         features = np.array(pickle.load(f0))
 
-    with open('clustering-genres.pkl', 'rb') as f0:
-        genre_ids = np.array(pickle.load(f0))
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
 
     pca_res = PCA(n_components=50).fit_transform(features)
-    tfse_res = TSNE().fit_transform(pca_res)
-    kcolors = ['red' if (genre == CLASS_1_ID) else 'blue' for genre in genre_ids]
+    tfse_res = TSNE(n_components=2).fit_transform(pca_res)
+    # kcolors = ['red' if (genre == CLASS_1_ID) else 'blue' for genre in genre_ids]
 
-    plt.scatter(tfse_res[:, 0], tfse_res[:, 1], c=kcolors, s=2, alpha=0.5)
+    plt.scatter(tfse_res[:, 0], tfse_res[:, 1], c=genre_ids, cmap='rainbow', s=2, alpha=0.5)
+    plt.colorbar()
     plt.show()
 
 
@@ -354,8 +374,18 @@ def cluster():
     genre_ids = np.array(genre_ids)
     clustered_genres_ids = np.zeros(genre_ids.shape)
     genre_1_idx = genre_ids == CLASS_1_ID
-    genre_1_labels = KMeans(n_clusters=3).fit_predict(features[genre_1_idx])
-    genre_2_labels = KMeans(n_clusters=3).fit_predict(features[~genre_1_idx])
+    n_samples = features.shape[0]
+    features -= np.mean(features, axis=0)
+    features /= n_samples
+    # pca_res_1 = PCA(n_components=2).fit_transform(features[genre_1_idx])
+    # pca_res_2 = PCA(n_components=2).fit_transform(features[~genre_1_idx])
+    # genre_1_labels = KMeans(n_clusters=2, n_init=100).fit_predict(pca_res_1)
+    # genre_2_labels = KMeans(n_clusters=4, n_init=100).fit_predict(pca_res_2)
+    genre_1_labels = DecisionTreeClassifier(maxn_clusters=4, n_init=100).fit(features[genre_1_idx])
+    genre_2_labels = DecisionTreeClassifier(n_clusters=6, n_init=100).fit_predict(features[~genre_1_idx])
+
+    genre_1_labels = KMeans(n_clusters=4, n_init=100).fit_predict(features[genre_1_idx])
+    genre_2_labels = KMeans(n_clusters=6, n_init=100).fit_predict(features[~genre_1_idx])
     clustered_genres_ids[genre_1_idx] = genre_1_labels
     clustered_genres_ids[~genre_1_idx] = genre_2_labels + max(genre_1_labels) + 1
     #
@@ -424,11 +454,15 @@ if __name__ == '__main__':
     # for iden in genre_ids:
     #     print(iden)
     # create_clustered_subgenres()
-    # visualise_reduction()
     # finetune_clustering()
+
+    # get_pc_eigenvalues()
     cluster()
-    clustering_analysis()
-    # convert_mp3_to_wav()
+    # visualise_reduction()
+    # clustering_analysis()
+    # clustering_analysis()
     create_genres_only(True)
+
+    # convert_mp3_to_wav()
     # create_spectrograms(overlap=True)
     # load_genre(CLASS_2_ID)
