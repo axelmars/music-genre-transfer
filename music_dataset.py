@@ -377,15 +377,15 @@ def cluster():
     n_samples = features.shape[0]
     features -= np.mean(features, axis=0)
     features /= n_samples
-    # pca_res_1 = PCA(n_components=2).fit_transform(features[genre_1_idx])
-    # pca_res_2 = PCA(n_components=2).fit_transform(features[~genre_1_idx])
-    # genre_1_labels = KMeans(n_clusters=2, n_init=100).fit_predict(pca_res_1)
-    # genre_2_labels = KMeans(n_clusters=4, n_init=100).fit_predict(pca_res_2)
-    genre_1_labels = DecisionTreeClassifier(maxn_clusters=4, n_init=100).fit(features[genre_1_idx])
-    genre_2_labels = DecisionTreeClassifier(n_clusters=6, n_init=100).fit_predict(features[~genre_1_idx])
+    pca_res_1 = PCA(n_components=2).fit_transform(features[genre_1_idx])
+    pca_res_2 = PCA(n_components=2).fit_transform(features[~genre_1_idx])
+    genre_1_labels = KMeans(n_clusters=4, n_init=100).fit_predict(pca_res_1)
+    genre_2_labels = KMeans(n_clusters=6, n_init=100).fit_predict(pca_res_2)
+    # genre_1_labels = DecisionTreeClassifier(max_clusters=4, n_init=100).fit(features[genre_1_idx])
+    # genre_2_labels = DecisionTreeClassifier(n_clusters=6, n_init=100).fit_predict(features[~genre_1_idx])
 
-    genre_1_labels = KMeans(n_clusters=4, n_init=100).fit_predict(features[genre_1_idx])
-    genre_2_labels = KMeans(n_clusters=6, n_init=100).fit_predict(features[~genre_1_idx])
+    # genre_1_labels = KMeans(n_clusters=4, n_init=100).fit_predict(features[genre_1_idx])
+    # genre_2_labels = KMeans(n_clusters=6, n_init=100).fit_predict(features[~genre_1_idx])
     clustered_genres_ids[genre_1_idx] = genre_1_labels
     clustered_genres_ids[~genre_1_idx] = genre_2_labels + max(genre_1_labels) + 1
     #
@@ -457,7 +457,7 @@ if __name__ == '__main__':
     # finetune_clustering()
 
     # get_pc_eigenvalues()
-    cluster()
+    # cluster()
     # visualise_reduction()
     # clustering_analysis()
     # clustering_analysis()
