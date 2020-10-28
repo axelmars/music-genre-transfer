@@ -520,11 +520,24 @@ class VggNormalization(Layer):
         return vgg16.preprocess_input(x)
 
 
+def convert_paths_to_str():
+    with open(f'spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f3:
+        spec_paths = pickle.load(f3)
+
+    str_spec_paths = []
+    for spec_path in spec_paths:
+        str_spec_path = str(spec_path)
+        print(str_spec_path)
+        str_spec_paths.append(str_spec_path)
+    with open(f'spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f1:
+        pickle.dump(str_spec_paths, f1)
+
+
 if __name__ == '__main__':
     # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    create_clustered_subgenres(vgg_features=True)
+    # create_clustered_subgenres(vgg_features=True)
     # finetune_clustering()
 
     # get_pc_eigenvalues()
@@ -533,7 +546,7 @@ if __name__ == '__main__':
     # clustering_analysis()
     # clustering_analysis()
     # create_genres_only(True)
-
+    convert_paths_to_str()
     # create_genres_only()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
