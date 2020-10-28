@@ -411,8 +411,8 @@ class SimpleFMA(DataSet):
 		poses = np.zeros(shape=(len(img_paths), ), dtype=np.uint32)
 
 		for i in range(len(img_paths)):
-			img = imageio.imread(img_paths[i])
-			# img = np.load(img_paths[i])
+			# img = imageio.imread(img_paths[i])
+			img = np.load(img_paths[i])
 
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
 			# img = img.T[:, :, None]
