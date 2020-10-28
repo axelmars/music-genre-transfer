@@ -386,7 +386,7 @@ class SimpleFMA(DataSet):
 
 		img_paths = []
 
-		for spec_path in sorted(spec_paths):
+		for spec_path in spec_paths:
 
 			img_name = re.search(r'\d+\.tif', spec_path).group(0)
 			img_path = os.path.join(self._base_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
@@ -406,7 +406,7 @@ class SimpleFMA(DataSet):
 
 		# unique_identity_ids = list(set(identity_ids))
 
-		imgs = np.empty(shape=(len(img_paths), 128, 128, 1), dtype=np.float32)
+		imgs = np.empty(shape=(len(img_paths), 128, 128, 2), dtype=np.float32)
 		identities = np.empty(shape=(len(img_paths), ), dtype=np.uint32)
 		poses = np.zeros(shape=(len(img_paths), ), dtype=np.uint32)
 
@@ -415,9 +415,9 @@ class SimpleFMA(DataSet):
 			# img = np.load(img_paths[i])
 
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
-			img = img.T[:, :, None]
+			# img = img.T[:, :, None]
 			imgs[i] = img
-			identities[i] = genre_ids[i].astype(np.uint32)
+			identities[i] = genre_ids[i]
 
 		return imgs, identities, poses
 

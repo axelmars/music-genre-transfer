@@ -12,6 +12,8 @@ default_config = dict(
 
 	min_level_db=-82.0,
 	max_level_db=41.0,
+	min_phase=-0.31,
+	max_phase=0.31,
 
 	perceptual_loss=dict(
 		layers=[2, 5, 8, 13, 18],

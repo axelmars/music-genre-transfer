@@ -142,10 +142,11 @@ class Converter:
 			optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 			loss=self.__l1_and_l2_loss
 			# loss=self.__perceptual_loss_multiscale
+			# loss=self.__l2_and_perceptual_loss_multiscale
 		)
 		lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
 		# lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
-		early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.0001, patience=100, verbose=1)
+		early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
 
 		tensorboard = EvaluationCallback(
 			imgs, identities,
@@ -197,8 +198,11 @@ class Converter:
 			verbose=1
 		)
 
+	def __l2_and_perceptual_loss_multiscale(self, y_true, y_pred):
+		return 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.5 * self.__perceptual_loss_multiscale(y_true, y_pred)
+
 	def __l1_and_l2_loss(self, y_true, y_pred):
-		alpha = 0.8
+		alpha = 0.5
 		return (1-alpha) * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + alpha * tf.keras.losses.MeanSquaredError()(y_true, y_pred)
 
 	def __perceptual_loss(self, y_true, y_pred):
@@ -341,7 +345,7 @@ class Converter:
 		x = Flatten()(x)
 
 		for i in range(2):
-			x = Dense(units=512)(x)
+			x = Dense(units=256)(x)
 			x = LeakyReLU()(x)
 
 		pose_code = Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay))(x)

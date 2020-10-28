@@ -116,7 +116,8 @@ def train(args):
 	# identities[identities == 12] = 1
 
 	print('================= ', np.count_nonzero(identities == 1))
-	imgs = (imgs - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
+	imgs[:, :, :, 0] = (imgs[:, :, :, 0] - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
+	imgs[:, :, :, 1] = (imgs[:, :, :, 1] - default_config['min_phase']) / (default_config['max_phase'] - default_config['min_phase'])
 	# imgs = imgs / 255.0
 
 	# shuffle the images
