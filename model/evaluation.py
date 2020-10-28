@@ -40,15 +40,15 @@ class EvaluationCallback(TensorBoard):
 		identity_codes = self.__identity_embedding.predict(identities)
 		identity_adain_params = self.__identity_modulation.predict(identity_codes)
 
-		blank = np.zeros_like(imgs[0][:, :, 0])
-		output = [np.concatenate([blank] + [img[:, :, 0] for img in imgs], axis=1)]
+		blank = np.zeros_like(imgs[0][:, :, 0][:, :, None])
+		output = [np.concatenate([blank] + [img[:, :, 0][:, :, None] for img in imgs], axis=1)]
 		# if not os.path.isdir('samples'):
 		# 	os.mkdir('samples')
 		for i in range(self.__n_samples_per_evaluation):
 			# imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (np.squeeze(imgs[i]).T * 255).astype(np.uint8))
 			# convert_spec_to_audio(imgs[i], i)
-			converted_imgs = [imgs[i][:,:, 0]] + [
-				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0][:, :, 0]
+			converted_imgs = [imgs[i][:, :, 0][:, :, None]] + [
+				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0][:, :, 0][:, :, None]
 				for j in range(self.__n_samples_per_evaluation)
 			]
 			# for j in range(self.__n_samples_per_evaluation):
