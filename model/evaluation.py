@@ -55,7 +55,8 @@ class EvaluationCallback(TensorBoard):
 			# 	img = self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
 			# 	img = save_image(img, i, j)
 			# 	convert_spec_to_audio(img, i, j)
-			output.append(np.concatenate(converted_imgs, axis=1))
+
+			output.append(np.concatenate(converted_imgs[:, :, :, 0], axis=1))
 
 		merged_img = np.concatenate(output, axis=0)
 		with self.writer.as_default():
