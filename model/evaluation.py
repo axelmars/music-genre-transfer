@@ -47,7 +47,7 @@ class EvaluationCallback(TensorBoard):
 		for i in range(self.__n_samples_per_evaluation):
 			# imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (np.squeeze(imgs[i]).T * 255).astype(np.uint8))
 			# convert_spec_to_audio(imgs[i], i)
-			converted_imgs = [imgs[i]] + [
+			converted_imgs = [imgs[i][0]] + [
 				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0][:, :, 0]
 				for j in range(self.__n_samples_per_evaluation)
 			]
