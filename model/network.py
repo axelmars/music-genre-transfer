@@ -311,7 +311,7 @@ class Converter:
 		if self.config.img_shape[-1] == 1:
 			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
 		elif self.config.img_shape[-1] == 2:
-			channel_to_add = tf.zeros((128, 128, 1), dtype=tf.float32)
+			channel_to_add = tf.zeros((self.config.img_shape[0], self.config.img_shape[1], 1), dtype=tf.float32)
 			x = Lambda(lambda t: tf.concat((t, [channel_to_add]), axis=-1))(img)
 		else:
 			x = img
