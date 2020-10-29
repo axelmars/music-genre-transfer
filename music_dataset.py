@@ -3,6 +3,8 @@ import os
 from pydub import AudioSegment
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+
 import librosa
 import librosa.display
 import ast
@@ -10,17 +12,20 @@ import pickle
 from imageio import imwrite
 from pathlib import Path
 from pydub.exceptions import CouldntDecodeError
-from sklearn.cluster import KMeans, OPTICS, SpectralClustering, AffinityPropagation
+from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from hdbscan import HDBSCAN
 from sklearn.preprocessing import MultiLabelBinarizer
 import matplotlib.pyplot as plt
+
 from keras.models import Model, load_model
+from keras import backend as K
 from keras.models import Model, load_model
 from keras.applications import vgg16
-from keras.layers import Layer, Input, Flatten
-from keras.preprocessing import image
+from keras.layers import Layer, Input, Flatten, Lambda
+# from keras.preprocessing import image
+from config import default_config
 
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
@@ -181,7 +186,7 @@ def create_spectrograms(overlap=False, include_phase=True):
             phase_spectro = librosa.feature.melspectrogram(S=np.angle(spectro), sr=sample_rate)
             amplitude_spectro = librosa.feature.melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate)
             amplitude_spectro = librosa.power_to_db(amplitude_spectro)
-            S_dB = np.zeros(shape=(128, phase_spectro.shape[1], 2))
+            S_dB = np.zeros(shape=(128, phase_spectro.shape[1], 2), dtype=np.float32)
             S_dB[:, :, 0] = amplitude_spectro
             S_dB[:, :, 1] = phase_spectro
             print('ampl max: ', np.max(S_dB[:, :, 0]), 'ampl min: ', np.min(S_dB[:, :, 0]))
@@ -221,7 +226,7 @@ def create_spectrograms(overlap=False, include_phase=True):
                         num = '0' + str(i)
                     else:
                         num = str(i)
-                    im_save_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.npy')
+                    im_save_path = os.path.join(OVERLAP_SPECS_OUTPUT_DIR, track_id + num + '.npy')
                     with open(im_save_path, 'wb') as f:
                         np.save(f, partition)
                     # imwrite(im_save_path, partition)
@@ -251,7 +256,7 @@ def create_spectrograms(overlap=False, include_phase=True):
         pickle.dump(split_genres_ids, f2)
 
 
-def create_genres_only(overlap=True):
+def create_genres_only():
     """
     loads tracks according to given ids and saves their spectrograms.
     :param tracks_ids:
@@ -354,51 +359,94 @@ def convert_mp3_to_wav():
 def create_clustered_subgenres(vgg_features=True):
     track_paths, genre_ids, track_ids = list_tracks()
     if vgg_features:
-        df_features = pd.DataFrame()
-        with open(f'spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
-            spec_paths = pickle.load(f1)
         vgg = vgg16.VGG16(include_top=False, input_shape=(128, 128, 3))
-        feature_extractor = Model(inputs=vgg.input, outputs=vgg.layers[0].output)
+        feature_extractor = Model(inputs=vgg.input, outputs=vgg.layers[1].output)
 
         img = Input(shape=(128, 128, 2))
-        x = VggNormalization()(img)
-        x = feature_extractor(x)
-        features = Flatten()(x)
+        channel_to_add = tf.zeros((128, 128, 1), dtype=tf.float32)
+        x = Lambda(lambda t: tf.concat((t, [channel_to_add]), axis=-1))(img)
+        x = VggNormalization()(x)
+        features = feature_extractor(x)
 
-        vgg = Model(inputs=img, outputs=features, name='vgg')
+        model = Model(inputs=img, outputs=features, name='vgg')
 
-        for spec_path in spec_paths:
-            img = np.load(spec_path)
-            img_features = vgg(img)
-            df_features.append(pd.Series(img_features))
+        print('vgg arch:')
+        model.summary()
+        batch_1 = []
+        batch_2 = []
+        count_class_1 = 0
+        count_class_2 = 0
+        kmeans_1 = MiniBatchKMeans(n_clusters=4, batch_size=385)
+        kmeans_2 = MiniBatchKMeans(n_clusters=4, batch_size=401)
+        for track_path, genre_id in zip(track_paths, genre_ids):
+            spec_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_path[-10: -4] + '00.npy')
+            try:
+                img = K.constant((np.expand_dims(np.load(spec_path), axis=0)), tf.float32)
+            except FileNotFoundError:
+                print(track_path[-10:-4], ' not found')
+                continue
+            img_features = model(img)
+            img_features = np.array(K.eval(K.flatten(img_features)), dtype=np.float32)
+            if genre_id == CLASS_1_ID:
+                count_class_1 += 1
+                batch_1.append(img_features)
+                if count_class_1 % 385 == 0:
+                    print('performing partial fit for genre 1...')
+                    kmeans_1.partial_fit(np.array(batch_1, dtype=np.float32))
+                    batch_1.clear()
+            if genre_id == CLASS_2_ID:
+                count_class_2 += 1
+                batch_2.append(img_features)
+                if count_class_2 % 401 == 0:
+                    print('performing partial fit for genre 2...')
+                    kmeans_2.partial_fit(np.array(batch_2, dtype=np.float32))
+                    batch_2.clear()
+        # inference
+        print('inferring clusters for spectrograms:')
+        clustering_list = []
+        for track_path, genre_id in zip(track_paths, genre_ids):
+            spec_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_path[-10: -4] + '00.npy')
+            try:
+                img = K.constant((np.expand_dims(np.load(spec_path), axis=0)), dtype=tf.float32)
+            except FileNotFoundError:
+                continue
+            img_features = model(img)
+            img_features = np.array(np.expand_dims(K.eval(K.flatten(img_features)), axis=0), dtype=np.float32)
+            if genre_id == CLASS_1_ID:
+                clustering_list.append(kmeans_1.predict(img_features)[0])
+            elif genre_id == CLASS_2_ID:
+                clustering_list.append(kmeans_2.predict(img_features)[0] + 4)
 
-    else:
-        features_data = pd.read_csv(FEATURES_FMA)
-        print(features_data)
-        print('tracks size: ', len(track_ids))
-        # print(features_data['feature'] == 139)
-        # for class_ids in track_ids:
-        df_features = features_data.loc[features_data['feature'].isin(track_ids)]
-        print(df_features)
-        existing_track_ids = df_features['feature']
-        existing_track_ids_idx = np.isin(np.array(track_ids), existing_track_ids)
-        # track_ids = track_ids[existing_track_ids_idx]
-        track_paths = np.array(track_paths)[existing_track_ids_idx]
-        genre_ids = np.array(genre_ids)[existing_track_ids_idx]
-        df_features = df_features.iloc[:, 1:]
+        with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
+            pickle.dump(clustering_list, f2)
 
-        print(df_features)
-
-    with open('features-for-clustering.pkl', 'wb') as f2:
-        pickle.dump(df_features, f2)
-
-    print('features size: ', df_features.shape)
-    # print(features['feature'])
-    # labels = HDBSCAN(min_cluster_size=20).fit_predict(X=features)
-    # labels = OPTICS().fit_predict(X=features)
-
-    with open('clustering-genres.pkl', 'wb') as f0:
-        pickle.dump(genre_ids, f0)
+    # else:
+    #     features_data = pd.read_csv(FEATURES_FMA)
+    #     print(features_data)
+    #     print('tracks size: ', len(track_ids))
+    #     # print(features_data['feature'] == 139)
+    #     # for class_ids in track_ids:
+    #     df_features = features_data.loc[features_data['feature'].isin(track_ids)]
+    #     print(df_features)
+    #     existing_track_ids = df_features['feature']
+    #     existing_track_ids_idx = np.isin(np.array(track_ids), existing_track_ids)
+    #     # track_ids = track_ids[existing_track_ids_idx]
+    #     track_paths = np.array(track_paths)[existing_track_ids_idx]
+    #     genre_ids = np.array(genre_ids)[existing_track_ids_idx]
+    #     df_features = df_features.iloc[:, 1:]
+    #
+    #     print(df_features)
+    #
+    # with open('features-for-clustering.pkl', 'wb') as f2:
+    #     pickle.dump(df_features, f2)
+    #
+    # print('features size: ', df_features.shape)
+    # # print(features['feature'])
+    # # labels = HDBSCAN(min_cluster_size=20).fit_predict(X=features)
+    # # labels = OPTICS().fit_predict(X=features)
+    # #
+    # with open('clustering-genres.pkl', 'wb') as f0:
+    #     pickle.dump(genre_ids, f0)
 
     # with open(f'track_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
     #     pickle.dump(track_paths, f2)
@@ -510,6 +558,7 @@ def set_non_clustered_genres():
     with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
         pickle.dump(genre_ids, f2)
 
+
 class VggNormalization(Layer):
 
     def __init__(self, **kwargs):
@@ -537,7 +586,7 @@ if __name__ == '__main__':
     # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    # create_clustered_subgenres(vgg_features=True)
+    create_clustered_subgenres(vgg_features=True)
     # finetune_clustering()
 
     # get_pc_eigenvalues()
@@ -545,8 +594,8 @@ if __name__ == '__main__':
     # visualise_reduction()
     # clustering_analysis()
     # clustering_analysis()
-    # create_genres_only(True)
-    convert_paths_to_str()
+    create_genres_only()
+    # convert_paths_to_str()
     # create_genres_only()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
