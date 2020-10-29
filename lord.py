@@ -112,8 +112,8 @@ def train(args):
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 
 	# for identity in np.unique(identities):
-	identities[identities == 17] = 0
-	identities[identities == 12] = 1
+	# identities[identities == 17] = 0
+	# identities[identities == 12] = 1
 
 	print('================= ', np.count_nonzero(identities == 1))
 	imgs[:, :, :, 0] = (imgs[:, :, :, 0] - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
