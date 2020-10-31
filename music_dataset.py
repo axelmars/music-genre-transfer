@@ -586,15 +586,15 @@ if __name__ == '__main__':
     # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    create_clustered_subgenres(vgg_features=True)
+    # create_clustered_subgenres(vgg_features=True)
     # finetune_clustering()
 
     # get_pc_eigenvalues()
     # cluster()
     # visualise_reduction()
+    clustering_analysis()
     # clustering_analysis()
-    # clustering_analysis()
-    create_genres_only()
+    # create_genres_only()
     # convert_paths_to_str()
     # create_genres_only()
     # set_non_clustered_genres()

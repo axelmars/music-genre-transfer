@@ -18,7 +18,7 @@ default_config = dict(
 	perceptual_loss=dict(
 		layers=[2, 5, 8, 13, 18],
 		weights=[1, 1, 1, 1, 1],
-		scales=[64, ]
+		scales=[128, ]
 	),
 
 	train=dict(
