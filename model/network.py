@@ -313,7 +313,7 @@ class Converter:
 		elif self.config.img_shape[-1] == 2:
 			channel_to_add = [[[0]] * 128] * 128
 			# channel_to_add = np.zeros(shape=(self.config.img_shape[0], self.config.img_shape[1], 1), dtype=np.float32)
-			x = Lambda(lambda t: tf.concat((t, [channel_to_add]), axis=-1))(img)
+			x = K.map_fn(lambda t: tf.concat((t, [channel_to_add]), axis=-1), img)
 		else:
 			x = img
 
