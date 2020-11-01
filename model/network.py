@@ -199,7 +199,7 @@ class Converter:
 		)
 
 	def __l2_and_perceptual_loss_multiscale(self, y_true, y_pred):
-		return 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.5 * self.__perceptual_loss_multiscale(y_true, y_pred)
+		return 0.75 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.25 * self.__perceptual_loss_multiscale(y_true, y_pred)
 
 	def __l1_and_l2_loss(self, y_true, y_pred):
 		alpha = 0.5
