@@ -14,7 +14,7 @@ from pathlib import Path
 from pydub.exceptions import CouldntDecodeError
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, IncrementalPCA
 from hdbscan import HDBSCAN
 from sklearn.preprocessing import MultiLabelBinarizer
 import matplotlib.pyplot as plt
@@ -356,6 +356,12 @@ def convert_mp3_to_wav():
     #     pickle.dump(genre_ids, f2)
 
 
+def clustering_processing(batch, pca, kmeans):
+    reduced_batch = pca.fit_transform(np.array(batch, dtype=np.float32))
+    print('num pca components:', pca.n_components_, 'pca explained_variance_ratio:', pca.explained_variance_ratio_)
+    kmeans.partial_fit(np.array(reduced_batch, dtype=np.float32))
+
+
 def create_clustered_subgenres(vgg_features=True):
     track_paths, genre_ids, track_ids = list_tracks()
     if vgg_features:
@@ -376,8 +382,10 @@ def create_clustered_subgenres(vgg_features=True):
         batch_2 = []
         count_class_1 = 0
         count_class_2 = 0
-        kmeans_1 = MiniBatchKMeans(n_clusters=4, batch_size=385)
-        kmeans_2 = MiniBatchKMeans(n_clusters=4, batch_size=401)
+        kmeans_1 = MiniBatchKMeans(n_clusters=4)
+        kmeans_2 = MiniBatchKMeans(n_clusters=7)
+        pca_1 = PCA(n_components=3)
+        pca_2 = PCA(n_components=3)
         for track_path, genre_id in zip(track_paths, genre_ids):
             spec_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_path[-10: -4] + '00.npy')
             try:
@@ -390,17 +398,23 @@ def create_clustered_subgenres(vgg_features=True):
             if genre_id == CLASS_1_ID:
                 count_class_1 += 1
                 batch_1.append(img_features)
-                if count_class_1 % 385 == 0:
+                if count_class_1 % 600 == 0:
                     print('performing partial fit for genre 1...')
-                    kmeans_1.partial_fit(np.array(batch_1, dtype=np.float32))
+                    # kmeans_1.partial_fit(np.array(batch_1, dtype=np.float32))
+                    clustering_processing(batch_1, pca_1, kmeans_1)
                     batch_1.clear()
             if genre_id == CLASS_2_ID:
                 count_class_2 += 1
                 batch_2.append(img_features)
-                if count_class_2 % 401 == 0:
+                if count_class_2 % 605 == 0:
                     print('performing partial fit for genre 2...')
-                    kmeans_2.partial_fit(np.array(batch_2, dtype=np.float32))
+                    # kmeans_2.partial_fit(np.array(batch_2, dtype=np.float32))
+                    clustering_processing(batch_2, pca_2, kmeans_2)
                     batch_2.clear()
+        print('performing final partial fit for genre 1...')
+        clustering_processing(batch_1, pca_1, kmeans_1)
+        print('performing final partial fit for genre 2...')
+        clustering_processing(batch_2, pca_2, kmeans_2)
         # inference
         print('inferring clusters for spectrograms:')
         clustering_list = []
@@ -413,8 +427,10 @@ def create_clustered_subgenres(vgg_features=True):
             img_features = model(img)
             img_features = np.array(np.expand_dims(K.eval(K.flatten(img_features)), axis=0), dtype=np.float32)
             if genre_id == CLASS_1_ID:
+                img_features = pca_1.transform(np.array(img_features, dtype=np.float32))
                 clustering_list.append(kmeans_1.predict(img_features)[0])
             elif genre_id == CLASS_2_ID:
+                img_features = pca_2.transform(np.array(img_features, dtype=np.float32))
                 clustering_list.append(kmeans_2.predict(img_features)[0] + 4)
 
         with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
@@ -586,17 +602,16 @@ if __name__ == '__main__':
     # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    # create_clustered_subgenres(vgg_features=True)
+    create_clustered_subgenres(vgg_features=True)
     # finetune_clustering()
-
+    clustering_analysis()
     # get_pc_eigenvalues()
     # cluster()
     # visualise_reduction()
-    clustering_analysis()
-    # clustering_analysis()
     # create_genres_only()
     # convert_paths_to_str()
-    # create_genres_only()
+    create_genres_only()
+
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)
