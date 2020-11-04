@@ -143,7 +143,7 @@ class Converter:
 			optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 			# loss=self.__l1_and_l2_loss
 			# loss=self.__perceptual_loss_multiscale
-			loss=self.__l2_and_perceptual_loss_multiscale
+			loss=self.custom_loss
 		)
 		lr_scheduler = CosineLearningRateScheduler(max_lr=3e-4, min_lr=1e-5, total_epochs=n_epochs)
 		# lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
