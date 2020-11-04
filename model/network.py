@@ -13,6 +13,7 @@ from keras.models import Model, load_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
 from keras_lr_multiplier import LRMultiplier
+from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
 
@@ -198,8 +199,26 @@ class Converter:
 			verbose=1
 		)
 
-	def __l2_and_perceptual_loss_multiscale(self, y_true, y_pred):
-		return 0.5 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.475 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.025 * self.__perceptual_loss_multiscale(y_true, y_pred)
+	def custom_loss(self, y_true, y_pred):
+		amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
+		phase_true = K.expand_dims(y_true[:, :, :, 1], axis=-1)
+
+		amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
+		phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)
+
+		amp_loss = self.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred)
+		phase_loss = 0.5 * self.__cyclic_mae(phase_true, phase_pred) + 0.5 * self.__cyclic_mse(phase_true, phase_pred)
+
+		return 0.5 * amp_loss + 0.5 * phase_loss
+
+	def __cyclic_mae(self, y_true, y_pred):
+		return K.mean(K.abs(K.minimum(K.abs(y_true - y_pred), K.minimum(K.abs(y_pred - y_true + 1), K.abs(y_pred - y_true - 1)))), axis=-1)
+
+	def __cyclic_mse(self, y_true, y_pred):
+		return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
+
+	def __l1_l2_and_perceptual_loss_multiscale(self, y_true, y_pred):
+		return 0.475 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.475 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.05 * self.__perceptual_loss_multiscale(y_true, y_pred)
 
 	def __l1_and_l2_loss(self, y_true, y_pred):
 		alpha = 0.5
@@ -311,9 +330,11 @@ class Converter:
 		if self.config.img_shape[-1] == 1:
 			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
 		elif self.config.img_shape[-1] == 2:
-			paddings = K.constant([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=tf.int32)
+			x = K.expand_dims(img[:, :, :, 0], -1)
+			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(x)
+			# paddings = K.constant([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=tf.int32)
 			# channel_to_add = np.zeros(shape=(self.config.img_shape[0], self.config.img_shape[1], 1), dtype=np.float32)
-			x = Lambda(lambda t: tf.pad(t, paddings=paddings, constant_values=0))(img)
+			# x = Lambda(lambda t: tf.pad(t, paddings=paddings, constant_values=0))(img)
 			# x = K.map_fn(lambda t: tf.concat((t, [channel_to_add]), axis=-1), img)
 		else:
 			x = img

@@ -368,9 +368,10 @@ def create_clustered_subgenres(vgg_features=True):
         vgg = vgg16.VGG16(include_top=False, input_shape=(128, 128, 3))
         feature_extractor = Model(inputs=vgg.input, outputs=vgg.layers[1].output)
 
-        img = Input(shape=(128, 128, 2))
-        channel_to_add = tf.zeros((128, 128, 1), dtype=tf.float32)
-        x = Lambda(lambda t: tf.concat((t, [channel_to_add]), axis=-1))(img)
+        img = Input(shape=(128, 128, 1))
+        # channel_to_add = tf.zeros((128, 128, 1), dtype=tf.float32)
+        x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
+        # x = Lambda(lambda t: tf.concat((t, [channel_to_add]), axis=-1))(img)
         x = VggNormalization()(x)
         features = feature_extractor(x)
 
@@ -383,13 +384,13 @@ def create_clustered_subgenres(vgg_features=True):
         count_class_1 = 0
         count_class_2 = 0
         kmeans_1 = MiniBatchKMeans(n_clusters=4)
-        kmeans_2 = MiniBatchKMeans(n_clusters=7)
-        pca_1 = PCA(n_components=3)
-        pca_2 = PCA(n_components=3)
+        kmeans_2 = MiniBatchKMeans(n_clusters=6)
+        pca_1 = PCA(n_components=8)
+        pca_2 = PCA(n_components=5)
         for track_path, genre_id in zip(track_paths, genre_ids):
             spec_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_path[-10: -4] + '00.npy')
             try:
-                img = K.constant((np.expand_dims(np.load(spec_path), axis=0)), tf.float32)
+                img = K.constant((np.expand_dims(np.load(spec_path)[:, :, 0], axis=(0, -1))), tf.float32)
             except FileNotFoundError:
                 print(track_path[-10:-4], ' not found')
                 continue
@@ -421,7 +422,7 @@ def create_clustered_subgenres(vgg_features=True):
         for track_path, genre_id in zip(track_paths, genre_ids):
             spec_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_path[-10: -4] + '00.npy')
             try:
-                img = K.constant((np.expand_dims(np.load(spec_path), axis=0)), dtype=tf.float32)
+                img = K.constant((np.expand_dims(np.load(spec_path)[:, :, 0], axis=(0, -1))), dtype=tf.float32)
             except FileNotFoundError:
                 continue
             img_features = model(img)

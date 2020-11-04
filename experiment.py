@@ -1,5 +1,6 @@
 from pydub import AudioSegment
 from scipy.io import wavfile
+
 import scipy.signal as signal
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,17 +8,15 @@ import subprocess
 import pandas as pd
 import ast
 from sklearn.preprocessing import MultiLabelBinarizer
-# import os
-from imageio import imread
-import pickle
+import os
+from imageio import imread, imwrite
 import librosa.display
 import librosa.feature
+
 # from keras.layers import GRU, Input, Embedding, Reshape, Conv1D, Conv2D
 # from keras.models import Model
-# from skimage.color import rgb2gray
+from skimage.color import rgb2gray
 # import tensorflow as tf
-# import imageio
-
 
 TRACK_ID_COL_NAME = 'Unnamed: 0'
 ALL_GENRES_COL_NAME = 'track.9'
@@ -25,7 +24,6 @@ TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
 CLASS_1_NAME = 'orchestral'
 CLASS_2_NAME = 'pop'
-SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img'
 
 
 def safe_parse(x):
@@ -43,7 +41,7 @@ def get_style(x, tracks_data, genres_data):
 
 def get_tracks_ids():
     # genres_data = pd.read_csv('music_metadata/genres.csv')
-    tracks_data = pd.read_csv('music_metadata/tracks.csv').iloc[2:][[TRACK_ID_COL_NAME, ALL_GENRES_COL_NAME]]
+    tracks_data = pd.read_csv('music_metadata/tracks.csv').iloc[2:][[TRACK_ID_COL_NAME, ALL_GENRES_COL_NAME, GENRES_COL_NAME]]
     genres_data = pd.read_csv('music_metadata/genres.csv')
     features_data = pd.read_csv('music_metadata/features.csv')
     print(tracks_data)
@@ -53,12 +51,16 @@ def get_tracks_ids():
     print(tracks_data[TRACK_ID_COL_NAME][2])
     # print(tracks_data)
     # tracks_data = tracks_data['track, album']
-    print(type(tracks_data.at[2, ALL_GENRES_COL_NAME]))
+    # print(type(tracks_data.at[2, ALL_GENRES_COL_NAME]))
     # tracks_data[ALL_GENRES_COL_NAME] = pd.eval(tracks_data[ALL_GENRES_COL_NAME])
-    tracks_data[[ALL_GENRES_COL_NAME, GENRES_COL_NAME]] = tracks_data[[ALL_GENRES_COL_NAME, GENRES_COL_NAME]].apply(safe_parse)
+    # tracks_data[ALL_GENRES_COL_NAME] = tracks_data[ALL_GENRES_COL_NAME].apply(safe_parse)
+    tracks_data[GENRES_COL_NAME] = tracks_data[GENRES_COL_NAME].apply(safe_parse)
     mlb = MultiLabelBinarizer()
-    tracks_data = tracks_data.join(pd.DataFrame(mlb.fit_transform(tracks_data.pop(GENRES_COL_NAME)), columns=mlb.classes, index=tracks_data.index))
-    print(tracks_data.columns)
+    tracks_data = tracks_data.join(pd.DataFrame(mlb.fit_transform(tracks_data.pop(GENRES_COL_NAME)), columns=mlb.classes_, index=tracks_data.index))
+    print(tracks_data)
+    print(np.count_nonzero(tracks_data[5]))
+    print(tracks_data[tracks_data[TRACK_ID_COL_NAME] == 26583])
+    # print(tracks_data[tracks_data[TRACK_ID_COL_NAME] == '5'][21])
     # orchestral genres: (symphony, soundtrack&(classical|pop|rock))
     # pop genres: (pop[not synthpop]). Make certain intersection with above is empty.
     orchestral_tracks_ids = tracks_data[tracks_data['something']]
@@ -98,20 +100,20 @@ def turn_tracks_into_short_tracks():
     """
     pass
 
-#
-# def preprocess():
-#     tracks_ids = get_tracks_ids()
-#     load_tracks(tracks_ids)
-#
-#
+
+def preprocess():
+    tracks_ids = get_tracks_ids()
+    load_tracks(tracks_ids)
+
+
 # def gru_experiment():
 #     inputs = Input(shape=(10, 8))
 #     output, hidden = GRU(4, return_sequences=True, return_state=True)(inputs)
 #     model = Model(inputs=inputs, outputs=[output, hidden])
 #     data = np.random.normal(size=[16, 10, 8])
 #     print(model.predict(data))
-#
-#
+
+
 # def embedding_experiment():
 #     identity = Input(shape=(1,))
 #
@@ -138,8 +140,8 @@ def turn_tracks_into_short_tracks():
 #     # model.summary()
 #
 #     return model
-#
-#
+
+
 # def conv1d_experiment():
 #     input_shape = (4, 128, 1033)
 #     x = tf.random.normal(input_shape)
@@ -147,44 +149,96 @@ def turn_tracks_into_short_tracks():
 #
 #     print(y.shape)
 #
+def normalize8(I):
+    mn = I.min()
+    mx = I.max()
+
+    mx -= mn
+
+    I = ((I - mn)/mx) * 255
+    return I.astype(np.uint8)
+
+
+def denormalize8(I):
+    I = (())
+
 
 if __name__ == '__main__':
-    # # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
-    # # # print(AudioSegment.ffmpeg)
-    # AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
-    # # path = r'C:\Users\Avi\Desktop\Uni\ResearchProjectLab\code_samples\music-genre-transfer'
-    # # os.chdir(path)
-    # # dirs = os.listdir(path)
-    # # for file in dirs:
-    # #     print(file)
+    AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
+    # print(AudioSegment.ffmpeg)
+    AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
+    # path = r'C:\Users\Avi\Desktop\Uni\ResearchProjectLab\code_samples\music-genre-transfer'
+    # os.chdir(path)
+    # dirs = os.listdir(path)
+    # for file in dirs:
+    #     print(file)
     # sound = AudioSegment.from_mp3('007713.mp3')
     # sound.export('waved_acous.wav', format='wav')
-    # samples, sample_rate = librosa.load('waved_acous.wav', sr=22050)
-    # print(sample_rate, samples.shape)
-    # samples = samples.astype(float)
-    # # audio_data = samples.sum(axis=1) / 2
-    # mel_specto = librosa.feature.melspectrogram(y=samples, sr=sample_rate)
-    # S_dB = librosa.power_to_db(mel_specto, ref=np.max)
-    # # print(mel_specto.shape)
-    # # print(S_dB.shape)
-    # save_path = 'test2.png'
-    # plt.imsave(save_path, S_dB)
-    # # gru_experiment()
-    # # embedding_experiment()
-    # # subprocess.call(['ffmpeg', '-i', '035545.mp3', 'waved_sound.wav'])
-    # # get_orchestral_tracks()
-    # spec = imread('test2.png')
-    # print(rgb2gray(spec).shape)
-    # # conv1d_experiment()
-    # img = imageio.imread(os.path.join(SPECS_OUTPUT_DIR, '0051785.png'))
-    # print(img)
-    # img = img.astype(np.float32)
-    # print(img)
-    # img /= 255.0
-    # print(img)
-    with open('genre_ids-10-5.pkl', 'rb') as f2:
-        genre_ids = pickle.load(f2)
+    samples, sample_rate = librosa.load('061679.wav', sr=22050)
 
-    for iden in genre_ids:
-        print(iden)
+    # stft_specto = np.abs(librosa.stft(y=samples))
+    spectro = librosa.stft(y=samples)
+    phase_spectro = librosa.feature.melspectrogram(S=np.angle(spectro), sr=sample_rate)
+    amplitude_spectro = librosa.feature.melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate)
+    amplitude_spectro = librosa.power_to_db(amplitude_spectro)
 
+    p_a_spetro = np.zeros((128, 128, 2), dtype=np.float32)
+
+    print(p_a_spetro.dtype, p_a_spetro.shape)
+    print(amplitude_spectro.dtype, amplitude_spectro.shape)
+
+    np.save('spectrogram_ampl_phase.npy', p_a_spetro)
+    np.save('spectrogram_ampl.npy', amplitude_spectro)
+    # out_spectro = librosa.feature.inverse.mel_to_stft(mel_phase_spectro)
+    # print(out_spectro.dtype, out_spectro.shape)
+    # print(np.allclose(out_spectro, phase_spectro))
+
+    # mel_specto = librosa.feature.melspectrogram(samples, sr=sample_rate)
+    #
+    # print(mel_specto.shape)
+    # # spectro = librosa.stft(y=samples)
+    # # S_dB = mel_specto
+    # S_dB = librosa.power_to_db(mel_specto)
+    #
+    # print(S_dB.shape)
+    # print('max: ', np.max(S_dB), ' min: ', np.min(S_dB))
+    # print(S_dB)
+    # # S_dB = (-80.0 - S_dB) / -80
+    # # S_dB = S_dB.astype(np.uint8)
+    #
+    # save_path = 'test2.tif'
+    # print(S_dB)
+    # imwrite(save_path, S_dB)
+    # # np.save(save_path, spectro)
+    # # spec = np.load('test2.npy')
+    # spec = imread('test2.tif')
+    # print(spec.dtype)
+    # # spec = (spec * (-80.0) + 80.0) * -1
+    # # print(spec)
+    # # # spec = spec.astype(np.float32)
+    # # print(spec)
+    # # # spec = spec / 255.0
+    # # print(spec)
+    # # np.save('test2.npy', spec)
+    # # spec = np.load('test2.npy')
+    # print(spec)
+    # # print('db_to_power done')
+    # # S = librosa.feature.inverse.mel_to_stft(spec, sr=22050)
+    # # print('mel_to_stft done')
+    # spec = librosa.feature.inverse.db_to_power(spec)
+    # audio = librosa.feature.inverse.mel_to_audio(spec)
+    # # audio = librosa.istft(spec)
+    # # audio = librosa.griffinlim(S)
+    # print('stft_to_audio done')
+    # # audio.export('reconstructed_wav.wav', format='wav')
+    # # audio = np.asarray(audio, dtype=np.int16)
+    # print(audio)
+    #
+    # wavfile.write('reconstructed_wav.wav', sample_rate, audio)
+    # # print(spec.shape)
+    # # print(spec)
+    # plt.imshow(spec)
+    # plt.show()
+
+    # conv1d_experiment()
+    # ids = get_tracks_ids()
