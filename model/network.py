@@ -325,7 +325,7 @@ class Converter:
 		layer_outputs = [vgg.layers[layer_id].output for layer_id in self.config.perceptual_loss_layers]
 		feature_extractor = Model(inputs=vgg.inputs, outputs=layer_outputs)
 
-		img = Input(shape=self.config.img_shape)
+		img = Input(shape=(128, 128, 1))
 
 		if self.config.img_shape[-1] == 1:
 			x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
