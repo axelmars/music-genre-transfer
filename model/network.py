@@ -129,22 +129,32 @@ class Converter:
 
         model = Model(inputs=[img, identity], outputs=generated_img)
 
+        # model.compile(
+        #     optimizer=LRMultiplierWrapper(
+        #         name='AdamOptimizer',
+        #         optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
+        #         multipliers={
+        #             'identity-embedding': 10.0
+        #         }
+        #     ),
+        #     loss=self.custom_loss
+        #     # loss=self.__perceptual_loss_multiscale
+        # )
         model.compile(
-            optimizer=LRMultiplierWrapper(
-                name='AdamOptimizer',
-                optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
-                multipliers={
+            optimizer=AdamLRM(
+                lr_multiplier={
                     'identity-embedding': 10.0
-                }
+                },
+                beta_1=0.5,
+                beta_2=0.999
             ),
             loss=self.custom_loss
-            # loss=self.__perceptual_loss_multiscale
         )
         # model.compile(
-        # 	optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
-        # 	# loss=self.__l1_and_l2_loss
-        # 	# loss=self.__perceptual_loss_multiscale
-        # 	loss=self.custom_loss
+        #     optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
+        #     # loss=self.__l1_and_l2_loss
+        #     # loss=self.__perceptual_loss_multiscale
+        #     loss=self.custom_loss
         # )
 
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
@@ -694,4 +704,3 @@ class LRMultiplierWrapper(Optimizer):
     def from_config(cls, config):
         optimizer = optimizers.deserialize(config.pop('optimizer'))
         return cls(optimizer, **config)
-
