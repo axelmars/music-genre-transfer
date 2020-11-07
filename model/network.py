@@ -678,7 +678,17 @@ class LRMultiplierWrapper(Optimizer):
         base_config = super(LRMultiplierWrapper, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+    def _apply_dense(self, grad, var):
+        return self.optimizer._apply_dense(grad, var)
+
+    def _resource_apply_dense(self, grad, var):
+        return self.optimizer._resource_apply_dense(grad, var)
+
+    def _apply_sparse(self, grad, var):
+        return self.optimizer._apply_sparse(grad, var)
+
     @classmethod
     def from_config(cls, config):
         optimizer = optimizers.deserialize(config.pop('optimizer'))
         return cls(optimizer, **config)
+
