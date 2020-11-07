@@ -687,6 +687,9 @@ class LRMultiplierWrapper(Optimizer):
     def _apply_sparse(self, grad, var):
         return self.optimizer._apply_sparse(grad, var)
 
+    def _resource_apply_sparse(self, grad, var):
+        return self.optimizer._resource_apply_sparse(grad, var)
+
     @classmethod
     def from_config(cls, config):
         optimizer = optimizers.deserialize(config.pop('optimizer'))
