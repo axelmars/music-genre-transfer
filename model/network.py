@@ -13,7 +13,8 @@ from keras.models import Model, load_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
 from keras_lr_multiplier import LRMultiplier
-from config import default_config
+from adamlrm import AdamLRM
+# from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
 
@@ -135,16 +136,17 @@ class Converter:
 					'identity-embedding': 10.0
 				}
 			),
-
-			loss=self.custom_loss
-			# loss=self.__perceptual_loss_multiscale
 		)
+		# 	loss=self.custom_loss
+		# 	# loss=self.__perceptual_loss_multiscale
+		# )
 		# model.compile(
 		# 	optimizer=optimizers.Adam(beta_1=0.5, beta_2=0.999),
 		# 	# loss=self.__l1_and_l2_loss
 		# 	# loss=self.__perceptual_loss_multiscale
 		# 	loss=self.custom_loss
 		# )
+
 		lr_scheduler = CosineLearningRateScheduler(max_lr=3e-4, min_lr=1e-5, total_epochs=n_epochs)
 		# lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
 		early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
