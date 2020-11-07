@@ -10,7 +10,7 @@ default_config = dict(
 	n_adain_layers=4,
 	adain_dim=256,
 
-	min_level_db=-82.0,
+	min_level_db=-100.0,
 	max_level_db=41.0,
 	min_phase=-0.31,
 	max_phase=0.31,
