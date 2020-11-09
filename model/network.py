@@ -157,7 +157,7 @@ class Converter:
         #     loss=self.custom_loss
         # )
 
-        lr_scheduler = CosineLearningRateScheduler(max_lr=2e-4, min_lr=1e-5, total_epochs=n_epochs)
+        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
         # lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
 
@@ -230,7 +230,7 @@ class Converter:
         return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
 
     def __l1_l2_and_perceptual_loss_multiscale(self, y_true, y_pred):
-        return 0.475 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.025 * self.__perceptual_loss_multiscale(y_true, y_pred)
+        return 0.4875 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * self.__perceptual_loss_multiscale(y_true, y_pred)
 
     def __l1_and_l2_loss(self, y_true, y_pred):
         alpha = 0.5
