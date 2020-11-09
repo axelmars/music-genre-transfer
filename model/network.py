@@ -219,7 +219,7 @@ class Converter:
         phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)
 
         amp_loss = self.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred)
-        phase_loss = 0.5 * self.__cyclic_mae(phase_true, phase_pred) + 0.5 * self.__cyclic_mse(phase_true, phase_pred)
+        phase_loss = self.__cyclic_mse(phase_true, phase_pred)
 
         return 0.5 * amp_loss + 0.5 * phase_loss
 
