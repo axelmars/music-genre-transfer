@@ -14,6 +14,9 @@ from pathlib import Path
 SAMPLE_RATE = 22050
 CLASS_1_ID = 17
 CLASS_2_ID = 12
+CLASS_1_SUB = 0
+CLASS_2_SUB = 4
+paddings = [[0, 0], [0, 0], [0, 1]]
 
 
 class Inferer:
@@ -40,9 +43,9 @@ class Inferer:
 
         genre_ids = np.array(genre_ids)
         spec_paths = np.array(spec_paths)
-        genre_ids[genre_ids == CLASS_2_ID] = 1
+        genre_ids[genre_ids == CLASS_2_SUB] = 1
         print('genre_ids class 2 shape: ', np.count_nonzero(genre_ids == 1))
-        genre_ids[genre_ids == CLASS_1_ID] = 0
+        genre_ids[genre_ids == CLASS_1_SUB] = 0
         if not self.__include_encoders:
             indices = np.load(os.path.join(self.__base_dir, 'bin/train_idx.npy'))
         else:
@@ -78,7 +81,7 @@ class Inferer:
                     dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
                     dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
                     try:
-                        Path(self.__base_dir + '/samples/genre_transform_5').mkdir(parents=True)
+                        Path(self.__base_dir + f'/samples/genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}').mkdir(parents=True)
                     except FileExistsError:
                         pass
                     if not self.__overlap:
@@ -89,56 +92,57 @@ class Inferer:
                         full_spec = np.concatenate(converted_imgs, axis=1)
                     else:
                         converted_imgs = [
-                            np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
+                            np.pad(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0], pad_width=paddings, constant_values=0)
                             for k in range(13)
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
-                    imwrite(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.tif'),
+                    imwrite(os.path.join(self.__base_dir, 'samples', f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) +
+                                         '.tif'),
                             full_spec)
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
                 try:
-                    Path(self.__base_dir + '/samples/identity_transform_5').mkdir(parents=True)
+                    Path(self.__base_dir + f'/samples/identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}').mkdir(parents=True)
                 except FileExistsError:
                     pass
                 if not self.__overlap:
                     converted_imgs = [
-                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
+                        np.pad(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0], pad_width=paddings, constant_values=0)
                         for k in range(10)
                     ]
                     full_spec = np.concatenate(converted_imgs, axis=1)
                 else:
                     converted_imgs = [
-                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0]).T
+                        np.pad(self.__converter.generator.predict([pose_codes[[k]], identity_adain_params[[k]]])[0], pad_width=paddings, constant_values=0)
                         for k in range(13)
                     ]
                     print('length converted_imgs: ', len(converted_imgs))
                     full_spec = self._concatenate_overlap(converted_imgs)
 
-                imwrite(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', 'out-' + img_name[:-5] + '.tif'), full_spec)
+                imwrite(os.path.join(self.__base_dir, 'samples', f'identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', 'out-' + img_name[:-5] + '.tif'), full_spec)
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
         mask = binomial_mask()
-        first_in_pair = np.concatenate((imgs[0], np.zeros((128, 96))), axis=1)
-        second_in_pair = np.concatenate((np.zeros((128, 96)), imgs[1]), axis=1)
+        first_in_pair = np.concatenate((imgs[0], np.zeros((128, 96)), 3), axis=1)
+        second_in_pair = np.concatenate((np.zeros((128, 96)), imgs[1], 3), axis=1)
         merge = (1 - mask) * first_in_pair + mask * second_in_pair
-        last_img = merge[:, -128:]
-        full_spec = np.zeros((128, 1280), dtype=np.float32)
-        full_spec[:, : 2 * 128 - 32] = merge
+        last_img = merge[:, -128:, :]
+        full_spec = np.zeros((128, 1280, 3), dtype=np.float32)
+        full_spec[:, : 2 * 128 - 32, :] = merge
         print('length imgs: ', len(imgs))
         for i, img in zip(range((128 - 32) * 2, 1280 - 128 + 1, 96), imgs[2:]):
             # print(i)
-            first_in_pair = np.concatenate((last_img, np.zeros((128, 96))), axis=1)
-            second_in_pair = np.concatenate((np.zeros((128, 96)), img), axis=1)
+            first_in_pair = np.concatenate((last_img, np.zeros((128, 96, 3))), axis=1)
+            second_in_pair = np.concatenate((np.zeros((128, 96, 3)), img), axis=1)
             merge = (1 - mask) * first_in_pair + mask * second_in_pair
-            last_img = merge[:, -128:]
-            full_spec[:, i - 96: i + 128] = merge
+            last_img = merge[:, -128:, :]
+            full_spec[:, i - 96: i + 128, :] = merge
         return full_spec
 
     def _combine_specs_to_orig(self, sample_path):
-        img_name = re.search(r'\d+\.tif', sample_path).group(0)
+        img_name = re.search(r'\d+\.npy', sample_path).group(0)
         img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_imgs', img_name)
         full_img = []
         for j in range(10):
@@ -152,7 +156,7 @@ class Inferer:
         return np.array(full_img), img_name
 
     def _combine_overlapping_specs(self, sample_path):
-        img_name = re.search(r'\d+\.tif', sample_path).group(0)
+        img_name = re.search(r'\d+\.npy', sample_path).group(0)
         img_path = os.path.join(self.__dataset_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
         full_img = []
         for j in range(13):
@@ -163,7 +167,10 @@ class Inferer:
             try:
                 curr_path = img_path[:-6] + num + img_path[-4:]
                 # img = imread(curr_path).T[:, :, None].astype(np.float32) / 255.0
-                img = (imread(curr_path).T[:, :, None] - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
+                loaded_img = np.load(curr_path)
+                img = np.zeros(loaded_img.shape)
+                img[:, :, 0] = (loaded_img[:, :, 0] - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
+                img[:, :, 1] = (loaded_img[:, :, 1] - default_config['min_phase']) / (default_config['max_phase'] - default_config['min_phase'])
                 full_img.append(img)
             except FileNotFoundError:
                 print('img not found at ', img_path)
@@ -173,22 +180,28 @@ class Inferer:
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
         # spec = (spec * -80.0 + 80.0) * -1
-        spec = (default_config['max_level_db'] - default_config['min_level_db']) * spec + default_config['min_level_db']
+        spec[:, :, 0] = (default_config['max_level_db'] - default_config['min_level_db']) * spec[:, :, 0] + default_config['min_level_db']
+        spec[:, :, 1] = (default_config['max_level_db'] - default_config['min_level_db']) * spec[:, :, 1] + default_config['min_level_db']
         print('denormalized max: ', np.max(spec), ' min: ', np.min(spec))
         # print('denormalized: ', spec)
-        spec = librosa.feature.inverse.db_to_power(spec)
-        S = librosa.feature.inverse.mel_to_stft(spec)
-        print('starting griffin-lim...')
-        audio = librosa.griffinlim(S)
-        print('griffin-lim done.')
+        spec[:, :, 0] = librosa.feature.inverse.db_to_power(spec[:, :, 0])
+        amp = librosa.feature.inverse.mel_to_stft(spec[:, :, 0])
+        phase = librosa.feature.inverse.mel_to_stft(spec[:, :, 1])
+        S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
+        print('performing iSTFT...')
+        audio = librosa.istft(S)
+        print('iSTFT done.')
+        # print('starting griffin-lim...')
+        # audio = librosa.griffinlim(S)
+        # print('griffin-lim done.')
 
         if genre_transform:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', 'genre_transform_5', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
         else:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', 'identity_transform_5', str(i) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', f'identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', str(i) + '.wav'), SAMPLE_RATE, audio)
 
 
-def binomial_mask(a=1, x=1, im_shape=(128, 128)):
+def binomial_mask(a=1, x=1, im_shape=(128, 128, 3)):
     n = int(.25 * im_shape[1]) - 1
     term = pow(a, n)
     # print(term, end=" ")
@@ -206,9 +219,9 @@ def binomial_mask(a=1, x=1, im_shape=(128, 128)):
     ser_array_squash = ser_array / np.max(ser_array) / 2
     half = int(n / 2)
     ser_array_squash = np.concatenate((ser_array_squash[: half], 1 - ser_array_squash[half:]))
-    mask = np.zeros((im_shape[0], 2 * im_shape[1] - int(.25 * im_shape[1])))
-    mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1])] = np.ones((im_shape[0], int(.75 * im_shape[1])))
-    mask[:, int(.75 * im_shape[1]): im_shape[1]] = np.tile(ser_array_squash, (im_shape[0], 1))
+    mask = np.zeros((im_shape[0], 2 * im_shape[1] - int(.25 * im_shape[1]), 3))
+    mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1]), :] = np.ones((im_shape[0], int(.75 * im_shape[1]), 3))
+    mask[:, int(.75 * im_shape[1]): im_shape[1], :] = np.tile(ser_array_squash, (im_shape[0], 1, 3))
     return mask
 
 
