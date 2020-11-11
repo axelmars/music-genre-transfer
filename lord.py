@@ -105,8 +105,12 @@ def split_samples(args):
 
 def train(args):
 	assets = AssetManager(args.base_dir)
-	model_dir = assets.recreate_model_dir(args.model_name)
-	tensorboard_dir = assets.recreate_tensorboard_dir(args.model_name)
+	if args.resume:
+		model_dir = assets.get_model_dir(args.model_name)
+		tensorboard_dir = assets.recreate_tensorboard_dir(args.model_name)
+	else:
+		model_dir = assets.recreate_model_dir(args.model_name)
+		tensorboard_dir = assets.recreate_tensorboard_dir(args.model_name)
 
 	data = np.load(assets.get_preprocess_file_path(args.data_name))
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
@@ -133,35 +137,50 @@ def train(args):
 	identities = identities[idx]
 	poses = identities[idx]
 
-	converter = Converter.build(
-		img_shape=imgs.shape[1:],
-		n_imgs=imgs.shape[0],
-		n_identities=n_identities,
+	if args.resume:
+		converter = Converter.load(model_dir, include_encoders=False)
 
-		pose_dim=args.pose_dim,
-		identity_dim=args.identity_dim,
+		converter.resume_train(
+			imgs=imgs,
+			identities=identities,
 
-		pose_std=default_config['pose_std'],
-		pose_decay=default_config['pose_decay'],
+			batch_size=default_config['train']['batch_size'],
+			n_epochs=default_config['train']['n_epochs'],
 
-		n_adain_layers=default_config['n_adain_layers'],
-		adain_dim=default_config['adain_dim'],
+			model_dir=model_dir,
+			tensorboard_dir=tensorboard_dir
+		)
 
-		perceptual_loss_layers=default_config['perceptual_loss']['layers'],
-		perceptual_loss_weights=default_config['perceptual_loss']['weights'],
-		perceptual_loss_scales=default_config['perceptual_loss']['scales']
-	)
+	else:
+		converter = Converter.build(
+			img_shape=imgs.shape[1:],
+			n_imgs=imgs.shape[0],
+			n_identities=n_identities,
 
-	converter.train(
-		imgs=imgs,
-		identities=identities,
+			pose_dim=args.pose_dim,
+			identity_dim=args.identity_dim,
 
-		batch_size=default_config['train']['batch_size'],
-		n_epochs=default_config['train']['n_epochs'],
+			pose_std=default_config['pose_std'],
+			pose_decay=default_config['pose_decay'],
 
-		model_dir=model_dir,
-		tensorboard_dir=tensorboard_dir
-	)
+			n_adain_layers=default_config['n_adain_layers'],
+			adain_dim=default_config['adain_dim'],
+
+			perceptual_loss_layers=default_config['perceptual_loss']['layers'],
+			perceptual_loss_weights=default_config['perceptual_loss']['weights'],
+			perceptual_loss_scales=default_config['perceptual_loss']['scales']
+		)
+
+		converter.train(
+			imgs=imgs,
+			identities=identities,
+
+			batch_size=default_config['train']['batch_size'],
+			n_epochs=default_config['train']['n_epochs'],
+
+			model_dir=model_dir,
+			tensorboard_dir=tensorboard_dir
+		)
 
 	converter.save(model_dir)
 
@@ -236,6 +255,7 @@ def main():
 	train_parser.add_argument('-pd', '--pose-dim', type=int, required=True)
 	train_parser.add_argument('-id', '--identity-dim', type=int, required=True)
 	train_parser.add_argument('-g', '--gpus', type=int, default=1)
+	train_parser.add_argument('-ex', '--resume', type=int, default=0)
 	train_parser.set_defaults(func=train)
 
 	train_encoders_parser = action_parsers.add_parser('train-encoders')

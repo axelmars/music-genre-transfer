@@ -81,8 +81,10 @@ class Converter:
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization
         })
 
+        model = load_model(os.path.join(model_dir, 'model.h5py'))
+
         if not include_encoders:
-            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator)
+            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
@@ -98,13 +100,14 @@ class Converter:
         self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
         self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         self.generator.save(os.path.join(model_dir, 'generator.h5py'))
+        self.model.save(os.path.join(model_dir, 'model.h5py'))
 
         if self.identity_encoder:
             self.identity_encoder.save(os.path.join(model_dir, 'identity_encoder.h5py'))
 
     def __init__(self, config,
                  pose_encoder, identity_embedding,
-                 identity_modulation, generator,
+                 identity_modulation, generator, model=None,
                  identity_encoder=None):
 
         self.config = config
@@ -114,6 +117,7 @@ class Converter:
         self.identity_modulation = identity_modulation
         self.generator = generator
         self.identity_encoder = identity_encoder
+        self.model = model
 
         # self.vgg = None
         self.vgg = self.__build_vgg()
@@ -127,7 +131,7 @@ class Converter:
         identity_adain_params = self.identity_modulation(identity_code)
         generated_img = self.generator([pose_code, identity_adain_params])
 
-        model = Model(inputs=[img, identity], outputs=generated_img)
+        self.model = Model(inputs=[img, identity], outputs=generated_img)
 
         # model.compile(
         #     optimizer=LRMultiplierWrapper(
@@ -140,7 +144,7 @@ class Converter:
         #     loss=self.custom_loss
         #     # loss=self.__perceptual_loss_multiscale
         # )
-        model.compile(
+        self.model.compile(
             optimizer=AdamLRM(
                 lr_multiplier={
                     'identity-embedding': 10.0
@@ -170,7 +174,26 @@ class Converter:
 
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
-        model.fit(
+        self.model.fit(
+            x=[imgs, identities], y=imgs,
+            batch_size=batch_size, epochs=n_epochs,
+            callbacks=[lr_scheduler, early_stopping, checkpoint, tensorboard],
+            verbose=1
+        )
+
+    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
+        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
+        early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
+        checkpoint = CustomModelCheckpoint(self, model_dir)
+
+        tensorboard = EvaluationCallback(
+            imgs, identities,
+            self.pose_encoder, self.identity_embedding,
+            self.identity_modulation, self.generator,
+            tensorboard_dir
+        )
+
+        self.model.fit(
             x=[imgs, identities], y=imgs,
             batch_size=batch_size, epochs=n_epochs,
             callbacks=[lr_scheduler, early_stopping, checkpoint, tensorboard],
