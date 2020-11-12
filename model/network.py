@@ -81,7 +81,7 @@ class Converter:
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization
         })
 
-        model = load_model(os.path.join(model_dir, 'model.h5py'))
+        model = load_model(os.path.join(model_dir, 'model.h5py'), custom_objects={'AdamLRM': AdamLRM})
 
         if not include_encoders:
             return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model)
