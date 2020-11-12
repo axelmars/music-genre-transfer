@@ -15,6 +15,7 @@ from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Em
 from keras.models import Model, load_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
+from keras.utils import custom_object_scope
 from keras_lr_multiplier import LRMultiplier
 from adamlrm import AdamLRM
 # from config import default_config
@@ -80,8 +81,8 @@ class Converter:
         generator = load_model(os.path.join(model_dir, 'generator.h5py'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization
         })
-
-        model = load_model(os.path.join(model_dir, 'model.h5py'), custom_objects={'AdamLRM': AdamLRM})
+        with custom_object_scope({'AdamLRM': AdamLRM, 'pose_encoder': pose_encoder, 'identity_embedding': identity_embedding, 'identity_modulation': identity_modulation, 'generator': generator}):
+            model = load_model(os.path.join(model_dir, 'model.h5py'))
 
         if not include_encoders:
             return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model)
@@ -287,10 +288,10 @@ class Converter:
     def __build_identity_embedding(cls, n_identities, identity_dim):
         identity = Input(shape=(1,))
 
-        identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim, name='identity-embedding')(identity)
+        identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim)(identity)
         identity_embedding = Reshape(target_shape=(identity_dim,))(identity_embedding)
 
-        model = Model(inputs=identity, outputs=identity_embedding)
+        model = Model(inputs=identity, outputs=identity_embedding, name='identity-embedding')
 
         print('identity embedding:')
         model.summary()
