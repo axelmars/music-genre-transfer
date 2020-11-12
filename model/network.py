@@ -74,7 +74,7 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'rb') as config_fd:
             config = pickle.load(config_fd)
 
-        model = load_model(os.path.join(model_dir, 'model.h5py'), custom_objects={
+        model = load_model(os.path.join(model_dir, 'model'), custom_objects={
             'AdamLRM': AdamLRM,
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
