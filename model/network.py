@@ -133,6 +133,7 @@ class Converter:
 
         self.model = Model(inputs=[img, identity], outputs=generated_img)
 
+        self.model.summary()
         # model.compile(
         #     optimizer=LRMultiplierWrapper(
         #         name='AdamOptimizer',
@@ -171,7 +172,6 @@ class Converter:
             self.identity_modulation, self.generator,
             tensorboard_dir
         )
-
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
         self.model.fit(
