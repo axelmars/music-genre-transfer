@@ -107,7 +107,7 @@ def train(args):
 	assets = AssetManager(args.base_dir)
 	if args.resume:
 		model_dir = assets.get_model_dir(args.model_name)
-		tensorboard_dir = assets.recreate_tensorboard_dir(args.model_name)
+		tensorboard_dir = assets.get_tensorboard_dir(args.model_name)
 	else:
 		model_dir = assets.recreate_model_dir(args.model_name)
 		tensorboard_dir = assets.recreate_tensorboard_dir(args.model_name)
