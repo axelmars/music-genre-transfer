@@ -81,8 +81,7 @@ class Converter:
         generator = load_model(os.path.join(model_dir, 'generator.h5py'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization
         })
-        with custom_object_scope({'AdamLRM': AdamLRM, 'pose_encoder': pose_encoder, 'identity_embedding': identity_embedding, 'identity_modulation': identity_modulation, 'generator': generator}):
-            model = load_model(os.path.join(model_dir, 'model.h5py'))
+        model = load_model(os.path.join(model_dir, 'model.h5py'), custom_objects={'AdamLRM': AdamLRM})
 
         if not include_encoders:
             return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model)
