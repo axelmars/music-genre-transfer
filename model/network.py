@@ -74,14 +74,25 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'rb') as config_fd:
             config = pickle.load(config_fd)
 
-        pose_encoder = load_model(os.path.join(model_dir, 'pose_encoder.h5py'))
-        identity_embedding = load_model(os.path.join(model_dir, 'identity_embedding.h5py'))
-        identity_modulation = load_model(os.path.join(model_dir, 'identity_modulation.h5py'))
-
-        generator = load_model(os.path.join(model_dir, 'generator.h5py'), custom_objects={
-            'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization
+        model = load_model(os.path.join(model_dir, 'model.h5py'), custom_objects={
+            'AdamLRM': AdamLRM,
+            'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
+            'CosineLearningRateScheduler': CosineLearningRateScheduler,
+            'CustomModelCheckpoint': CustomModelCheckpoint,
+            'EvaluationCallback': EvaluationCallback
         })
-        model = load_model(os.path.join(model_dir, 'model.h5py'), custom_objects={'AdamLRM': AdamLRM})
+
+        pose_encoder = model.layers[3]
+        identity_embedding = model.layers[2]
+        identity_modulation = model.layers[4]
+        generator = model.layers[5]
+        # pose_encoder = load_model(os.path.join(model_dir, 'pose_encoder.h5py'))
+        # identity_embedding = load_model(os.path.join(model_dir, 'identity_embedding.h5py'))
+        # identity_modulation = load_model(os.path.join(model_dir, 'identity_modulation.h5py'))
+        #
+        # generator = load_model(os.path.join(model_dir, 'generator.h5py'), custom_objects={
+        #     'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization
+        # })
 
         if not include_encoders:
             return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model)
@@ -96,14 +107,14 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(self.config, config_fd)
 
-        self.pose_encoder.save(os.path.join(model_dir, 'pose_encoder.h5py'))
-        self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
-        self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
-        self.generator.save(os.path.join(model_dir, 'generator.h5py'))
+        # self.pose_encoder.save(os.path.join(model_dir, 'pose_encoder.h5py'))
+        # self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
+        # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
+        # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
         self.model.save(os.path.join(model_dir, 'model.h5py'))
 
-        if self.identity_encoder:
-            self.identity_encoder.save(os.path.join(model_dir, 'identity_encoder.h5py'))
+        # if self.identity_encoder:
+        #     self.identity_encoder.save(os.path.join(model_dir, 'identity_encoder.h5py'))
 
     def __init__(self, config,
                  pose_encoder, identity_embedding,
