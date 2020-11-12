@@ -111,7 +111,7 @@ class Converter:
         # self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
         # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
-        self.model.save(os.path.join(model_dir, 'model.h5py'))
+        self.model.save(os.path.join(model_dir, 'model'))
 
         # if self.identity_encoder:
         #     self.identity_encoder.save(os.path.join(model_dir, 'identity_encoder.h5py'))
@@ -183,7 +183,7 @@ class Converter:
             self.identity_modulation, self.generator,
             tensorboard_dir
         )
-        checkpoint = CustomModelCheckpoint(self.model, model_dir)
+        checkpoint = CustomModelCheckpoint(self, model_dir)
 
         self.model.fit(
             x=[imgs, identities], y=imgs,
@@ -195,7 +195,7 @@ class Converter:
     def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
-        checkpoint = CustomModelCheckpoint(self.model, model_dir)
+        checkpoint = CustomModelCheckpoint(self, model_dir)
 
         tensorboard = EvaluationCallback(
             imgs, identities,
