@@ -80,7 +80,6 @@ class Converter:
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
-            'identity-embedding': cls.__build_identity_embedding
         })
 
         pose_encoder = model.layers[3]
@@ -302,7 +301,7 @@ class Converter:
         identity_embedding = Embedding(input_dim=n_identities, output_dim=identity_dim)(identity)
         identity_embedding = Reshape(target_shape=(identity_dim,))(identity_embedding)
 
-        model = Model(inputs=identity, outputs=identity_embedding, name='identity-embedding')
+        model = Model(inputs=identity, outputs=identity_embedding)
 
         print('identity embedding:')
         model.summary()
@@ -317,7 +316,7 @@ class Converter:
         adain_all = Concatenate(axis=-1)(adain_per_layer)
         identity_adain_params = Reshape(target_shape=(n_adain_layers, adain_dim, 2))(adain_all)
 
-        model = Model(inputs=[identity_code], outputs=identity_adain_params, name='identity-modulation')
+        model = Model(inputs=[identity_code], outputs=identity_adain_params)
 
         print('identity-modulation arch:')
         model.summary()
@@ -359,7 +358,7 @@ class Converter:
         x = Conv2D(filters=img_shape[-1], kernel_size=(7, 7), padding='same')(x)
         target_img = Activation('sigmoid')(x)
 
-        model = Model(inputs=[pose_code, identity_adain_params], outputs=target_img, name='generator')
+        model = Model(inputs=[pose_code, identity_adain_params], outputs=target_img)
 
         print('generator arch:')
         model.summary()
