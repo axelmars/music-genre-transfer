@@ -79,7 +79,8 @@ class Converter:
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
-            'EvaluationCallback': EvaluationCallback
+            'EvaluationCallback': EvaluationCallback,
+            'identity-embedding': cls.__build_identity_embedding
         })
 
         pose_encoder = model.layers[3]
