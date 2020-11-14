@@ -82,6 +82,7 @@ class Converter:
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
+            'custom_loss': cls.custom_loss
         }, compile=False)
 
         model.compile(
