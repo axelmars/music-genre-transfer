@@ -17,7 +17,7 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
 from keras.utils import custom_object_scope
 from keras_lr_multiplier import LRMultiplier
-from adamlrm import AdamLRM
+from keras.optimizers import AdamLRM
 # from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
@@ -74,13 +74,20 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'rb') as config_fd:
             config = pickle.load(config_fd)
 
+        with open(os.path.join(model_dir, 'optimizer.pkl'), 'rb') as opt_fd:
+            opt = pickle.load(opt_fd)
+
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
-            'AdamLRM': AdamLRM,
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
-        })
+        }, compile=False)
+
+        model.compile(
+            optimizer=opt,
+            loss=cls.custom_loss
+        )
 
         pose_encoder = model.layers[3]
         identity_embedding = model.layers[2]
@@ -95,7 +102,7 @@ class Converter:
         # })
 
         if not include_encoders:
-            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model)
+            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
@@ -106,6 +113,9 @@ class Converter:
 
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(self.config, config_fd)
+
+        with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
+            pickle.dump(self.opt, opt_fd)
 
         # self.pose_encoder.save(os.path.join(model_dir, 'pose_encoder.h5py'))
         # self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
@@ -118,7 +128,7 @@ class Converter:
 
     def __init__(self, config,
                  pose_encoder, identity_embedding,
-                 identity_modulation, generator, model=None,
+                 identity_modulation, generator, model=None, opt=None,
                  identity_encoder=None):
 
         self.config = config
@@ -129,6 +139,7 @@ class Converter:
         self.generator = generator
         self.identity_encoder = identity_encoder
         self.model = model
+        self.opt = opt
 
         # self.vgg = None
         self.vgg = self.__build_vgg()
@@ -156,14 +167,15 @@ class Converter:
         #     loss=self.custom_loss
         #     # loss=self.__perceptual_loss_multiscale
         # )
+        self.opt = AdamLRM(
+            lr_multiplier={
+                self.model.get_layer(index=2).name: 10.0
+            },
+            beta_1=0.5,
+            beta_2=0.999
+        ),
         self.model.compile(
-            optimizer=AdamLRM(
-                lr_multiplier={
-                    self.model.get_layer(index=2).name: 10.0
-                },
-                beta_1=0.5,
-                beta_2=0.999
-            ),
+            optimizer=self.opt,
             loss=self.custom_loss
         )
         # model.compile(
