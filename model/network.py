@@ -15,6 +15,7 @@ from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Em
 from keras.models import Model, load_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
+from adamlrm import AdamLRM
 from keras.utils import custom_object_scope
 from keras_lr_multiplier import LRMultiplier
 # from config import default_config
