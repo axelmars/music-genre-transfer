@@ -17,7 +17,6 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
 from keras.utils import custom_object_scope
 from keras_lr_multiplier import LRMultiplier
-from keras.optimizers import AdamLRM
 # from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
