@@ -173,7 +173,7 @@ class Converter:
             },
             beta_1=0.5,
             beta_2=0.999
-        ),
+        )
         self.model.compile(
             optimizer=self.opt,
             loss=self.custom_loss
