@@ -159,7 +159,7 @@ class Converter:
         self.model.compile(
             optimizer=AdamLRM(
                 lr_multiplier={
-                    'functional_1': 10.0
+                    self.model.get_layer(index=2).name: 10.0
                 },
                 beta_1=0.5,
                 beta_2=0.999
