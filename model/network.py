@@ -82,7 +82,7 @@ class Converter:
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
-        }, compile=False)
+        })
 
         pose_encoder = model.layers[3]
         identity_embedding = model.layers[2]
@@ -201,10 +201,10 @@ class Converter:
         )
 
     def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
-        self.model.compile(
-            optimizer=self.opt,
-            loss=self.custom_loss
-        )
+        # self.model.compile(
+        #     optimizer=self.opt,
+        #     loss=self.custom_loss
+        # )
 
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
