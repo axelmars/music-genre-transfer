@@ -82,6 +82,7 @@ class Converter:
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
+            'AdamLRM': AdamLRM
         })
 
         pose_encoder = model.layers[3]
