@@ -106,9 +106,11 @@ class Converter:
     def save(self, model_dir):
         print('saving models...')
 
+        print('pickling config...')
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(self.config, config_fd)
 
+        print('pickling optimizer...')
         with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
             pickle.dump(self.opt, opt_fd)
 
@@ -116,7 +118,7 @@ class Converter:
         # self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
         # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
-        self.model.save(os.path.join(model_dir, 'model'))
+        self.model.save_model(os.path.join(model_dir, 'model'))
 
         # if self.identity_encoder:
         #     self.identity_encoder.save(os.path.join(model_dir, 'identity_encoder.h5py'))
