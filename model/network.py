@@ -119,7 +119,7 @@ class Converter:
         # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
         print('saving model...')
-        self.model.save_model(os.path.join(model_dir, 'model'))
+        self.model.save(os.path.join(model_dir, 'model'))
 
         # if self.identity_encoder:
         #     self.identity_encoder.save(os.path.join(model_dir, 'identity_encoder.h5py'))
