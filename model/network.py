@@ -97,7 +97,7 @@ class Converter:
         # })
 
         if not include_encoders:
-            Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt)
+            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
