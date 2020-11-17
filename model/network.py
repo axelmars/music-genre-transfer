@@ -82,8 +82,7 @@ class Converter:
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
             'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
-            'AdamLRM': AdamLRM
-        })
+        }, compile=False)
 
         pose_encoder = model.layers[3]
         identity_embedding = model.layers[2]
@@ -98,7 +97,7 @@ class Converter:
         # })
 
         if not include_encoders:
-            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt)
+            Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
@@ -172,7 +171,7 @@ class Converter:
         )
         self.model.compile(
             optimizer=self.opt,
-            loss=self.custom_loss
+            loss=self.get_custom_loss()
         )
 
         # model.compile(
@@ -202,10 +201,10 @@ class Converter:
         )
 
     def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
-        # self.model.compile(
-        #     optimizer=self.opt,
-        #     loss=self.custom_loss
-        # )
+        self.model.compile(
+            optimizer=self.opt,
+            loss=self.get_custom_loss()
+        )
 
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
@@ -259,17 +258,21 @@ class Converter:
             verbose=1
         )
 
-    def custom_loss(self, y_true, y_pred):
-        amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
-        phase_true = K.expand_dims(y_true[:, :, :, 1], axis=-1)
+    def get_custom_loss(self):
+        # converter = self
 
-        amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
-        phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)
+        def custom_loss(y_true, y_pred):
+            amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
+            phase_true = K.expand_dims(y_true[:, :, :, 1], axis=-1)
 
-        amp_loss = self.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred)
-        phase_loss = self.__cyclic_mse(phase_true, phase_pred)
+            amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
+            phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)
 
-        return 0.5 * amp_loss + 0.5 * phase_loss
+            amp_loss = self.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred)
+            phase_loss = self.__cyclic_mse(phase_true, phase_pred)
+
+            return 0.5 * amp_loss + 0.5 * phase_loss
+        return custom_loss
 
     def __cyclic_mae(self, y_true, y_pred):
         return K.mean(K.abs(K.minimum(K.abs(y_true - y_pred), K.minimum(K.abs(y_pred - y_true + 1), K.abs(y_pred - y_true - 1)))), axis=-1)
@@ -549,3 +552,4 @@ class CosineLearningRateScheduler(Callback):
 
         K.set_value(self.model.optimizer.lr, lr)
         logs['lr'] = lr
+
