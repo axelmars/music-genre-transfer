@@ -205,7 +205,7 @@ class Converter:
             verbose=1
         )
 
-    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
+    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir, saved_on_epoch=0):
         self.model.summary()
 
         self.model.compile(
@@ -213,7 +213,7 @@ class Converter:
             loss=self.get_custom_loss()
         )
 
-        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs)
+        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=saved_on_epoch, starting_lr=self.opt.learning_rate)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
@@ -543,18 +543,21 @@ class CustomModelCheckpoint(Callback):
 
 class CosineLearningRateScheduler(Callback):
 
-    def __init__(self, max_lr, min_lr, total_epochs):
+    def __init__(self, max_lr, min_lr, total_epochs, starting_epoch=0, starting_lr=-1):
         super().__init__()
 
         self.max_lr = max_lr
         self.min_lr = min_lr
         self.total_epochs = total_epochs
+        self.starting_epoch = starting_epoch
+        if starting_lr == -1:
+            self.starting_lr = self.max_lr
 
     def on_train_begin(self, logs=None):
-        K.set_value(self.model.optimizer.lr, self.max_lr)
+        K.set_value(self.model.optimizer.lr, self.starting_lr)
 
     def on_epoch_end(self, epoch, logs=None):
-        fraction = epoch / self.total_epochs
+        fraction = (self.starting_epoch + epoch) / self.total_epochs
         lr = self.min_lr + 0.5 * (self.max_lr - self.min_lr) * (1 + np.cos(fraction * np.pi))
 
         K.set_value(self.model.optimizer.lr, lr)

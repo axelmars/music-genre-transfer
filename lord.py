@@ -148,7 +148,8 @@ def train(args):
 			n_epochs=default_config['train']['n_epochs'],
 
 			model_dir=model_dir,
-			tensorboard_dir=tensorboard_dir
+			tensorboard_dir=tensorboard_dir,
+			saved_on_epoch=args.resume
 		)
 
 	else:
@@ -255,7 +256,7 @@ def main():
 	train_parser.add_argument('-pd', '--pose-dim', type=int, required=True)
 	train_parser.add_argument('-id', '--identity-dim', type=int, required=True)
 	train_parser.add_argument('-g', '--gpus', type=int, default=1)
-	train_parser.add_argument('-ex', '--resume', type=int, default=0)
+	train_parser.add_argument('-ex', '--resume', type=int, default=-1)
 	train_parser.set_defaults(func=train)
 
 	train_encoders_parser = action_parsers.add_parser('train-encoders')
