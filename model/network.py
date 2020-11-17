@@ -72,10 +72,13 @@ class Converter:
         print('loading models...')
 
         with open(os.path.join(model_dir, 'config.pkl'), 'rb') as config_fd:
-            config = pickle.load(config_fd)
+            config_dict = pickle.load(config_fd)
 
         with open(os.path.join(model_dir, 'optimizer.pkl'), 'rb') as opt_fd:
             opt = pickle.load(opt_fd)
+
+        config = config_dict['config']
+        epoch = config_dict['epoch']
 
         print(f'loaded optimizer with learning rate {opt.learning_rate}')
 
@@ -99,18 +102,19 @@ class Converter:
         # })
 
         if not include_encoders:
-            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt)
+            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, opt, epoch)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
         return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, identity_encoder)
 
-    def save(self, model_dir):
+    def save(self, model_dir, epoch):
         print('saving models...')
 
-        print('pickling config...')
+        print(f'pickling config, epoch {epoch}...')
+        config = {'config': self.config, 'epoch': epoch}
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
-            pickle.dump(self.config, config_fd)
+            pickle.dump(config, config_fd)
 
         print(f'pickling optimizer with learning rate {self.opt.learning_rate}...')
         with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
@@ -128,7 +132,7 @@ class Converter:
 
     def __init__(self, config,
                  pose_encoder, identity_embedding,
-                 identity_modulation, generator, model=None, opt=None,
+                 identity_modulation, generator, model=None, opt=None, epoch=0,
                  identity_encoder=None):
 
         self.config = config
@@ -140,6 +144,7 @@ class Converter:
         self.identity_encoder = identity_encoder
         self.model = model
         self.opt = opt
+        self.epoch = epoch
 
         # self.vgg = None
         self.vgg = self.__build_vgg()
@@ -213,7 +218,7 @@ class Converter:
             loss=self.get_custom_loss()
         )
 
-        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=saved_on_epoch, starting_lr=self.opt.learning_rate)
+        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.opt.learning_rate)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
@@ -538,7 +543,7 @@ class CustomModelCheckpoint(Callback):
         self.__path = path
 
     def on_epoch_end(self, epoch, logs=None):
-        self.__model.save(self.__path)
+        self.__model.save(self.__path, epoch)
 
 
 class CosineLearningRateScheduler(Callback):
@@ -559,7 +564,7 @@ class CosineLearningRateScheduler(Callback):
         K.set_value(self.model.optimizer.lr, self.starting_lr)
 
     def on_epoch_end(self, epoch, logs=None):
-        fraction = (self.starting_epoch + epoch) / self.total_epochs
+        fraction = (self.starting_epoch + 1 + epoch) / self.total_epochs
         lr = self.min_lr + 0.5 * (self.max_lr - self.min_lr) * (1 + np.cos(fraction * np.pi))
 
         K.set_value(self.model.optimizer.lr, lr)
