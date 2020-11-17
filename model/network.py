@@ -77,8 +77,9 @@ class Converter:
         with open(os.path.join(model_dir, 'optimizer.pkl'), 'rb') as opt_fd:
             opt = pickle.load(opt_fd)
 
-        config = config_dict['config']
-        epoch = config_dict['epoch']
+        # config = config_dict['config']
+        config = config_dict
+        # epoch = config_dict['epoch']
 
         print(f'loaded optimizer with learning rate {opt.learning_rate}')
 
