@@ -77,6 +77,8 @@ class Converter:
         with open(os.path.join(model_dir, 'optimizer.pkl'), 'rb') as opt_fd:
             opt = pickle.load(opt_fd)
 
+        print(f'loaded optimizer with learning rate {opt.learning_rate}')
+
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'CosineLearningRateScheduler': CosineLearningRateScheduler,
@@ -110,7 +112,7 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(self.config, config_fd)
 
-        print('pickling optimizer...')
+        print(f'pickling optimizer with learning rate {self.opt.learning_rate}...')
         with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
             pickle.dump(self.opt, opt_fd)
 
