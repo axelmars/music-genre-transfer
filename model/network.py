@@ -118,6 +118,7 @@ class Converter:
         # self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
         # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
+        print('saving model...')
         self.model.save_model(os.path.join(model_dir, 'model'))
 
         # if self.identity_encoder:
@@ -203,6 +204,8 @@ class Converter:
         )
 
     def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
+        self.model.summary()
+
         self.model.compile(
             optimizer=self.opt,
             loss=self.get_custom_loss()
