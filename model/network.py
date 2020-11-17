@@ -210,7 +210,7 @@ class Converter:
             verbose=1
         )
 
-    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir, saved_on_epoch=0):
+    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
         self.model.summary()
 
         self.model.compile(

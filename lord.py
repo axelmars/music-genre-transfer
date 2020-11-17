@@ -149,7 +149,6 @@ def train(args):
 
 			model_dir=model_dir,
 			tensorboard_dir=tensorboard_dir,
-			saved_on_epoch=args.resume
 		)
 
 	else:
