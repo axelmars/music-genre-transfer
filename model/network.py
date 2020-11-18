@@ -18,7 +18,7 @@ from adamlrm import AdamLRM
 # from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
-
+from config import default_config as config
 from model.evaluation import EvaluationCallback, TrainEncodersEvaluationCallback
 
 
@@ -74,17 +74,18 @@ class Converter:
         # with open(os.path.join(model_dir, 'optimizer.pkl'), 'rb') as opt_fd:
         #     opt = pickle.load(opt_fd)
 
-        config = config_dict['config']
+        config_c = config_dict['config']
         # config = config_dict
         epoch = config_dict['epoch']
 
         # print(f'loaded optimizer with learning rate {opt.learning_rate}')
-        print(f'last saved epoch: {epoch}')
 
+        print(f'last saved epoch: {epoch}')
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'EvaluationCallback': EvaluationCallback,
             'AdamLRM': AdamLRM,
+            'custom_loss': cls.get_custom_loss()
         })
 
         pose_encoder = model.layers[3]
@@ -100,7 +101,7 @@ class Converter:
         # })
 
         if not include_encoders:
-            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, None, epoch)
+            return Converter(config_c, pose_encoder, identity_embedding, identity_modulation, generator, model, None, epoch)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
@@ -115,9 +116,9 @@ class Converter:
         # os.makedirs(model_dir)
 
         print(f'pickling config, epoch {epoch}...')
-        config = {'config': self.config, 'epoch': epoch}
+        config_dict = {'config': self.config, 'epoch': epoch}
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
-            pickle.dump(config, config_fd)
+            pickle.dump(config_dict, config_fd)
 
         print(f'serializing optimizer with learning rate {self.opt.learning_rate}...')
         # with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
@@ -151,7 +152,7 @@ class Converter:
         self.epoch = epoch
 
         # self.vgg = None
-        self.vgg = self.__build_vgg()
+        # self.vgg = self.__build_vgg()
 
     def train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
         img = Input(shape=self.config.img_shape)
@@ -217,10 +218,10 @@ class Converter:
     def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
         self.model.summary()
 
-        self.model.compile(
-            optimizer=self.model.optimizer,
-            loss=self.model.get_custom_loss
-        )
+        # self.model.compile(
+        #     optimizer=self.model.optimizer,
+        #     loss=self.model.get_custom_loss
+        # )
 
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.opt.learning_rate)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
@@ -274,8 +275,10 @@ class Converter:
             verbose=1
         )
 
-    def get_custom_loss(self):
+    @classmethod
+    def get_custom_loss(cls):
         # converter = self
+        vgg = cls.__build_vgg()
 
         def custom_loss(y_true, y_pred):
             amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
@@ -284,30 +287,34 @@ class Converter:
             amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
             phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)
 
-            amp_loss = self.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred)
-            phase_loss = self.__cyclic_mse(phase_true, phase_pred)
+            amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg)
+            phase_loss = cls.__cyclic_mse(phase_true, phase_pred)
 
             return 0.5 * amp_loss + 0.5 * phase_loss
         return custom_loss
 
-    def __cyclic_mae(self, y_true, y_pred):
+    @classmethod
+    def __cyclic_mae(cls, y_true, y_pred):
         return K.mean(K.abs(K.minimum(K.abs(y_true - y_pred), K.minimum(K.abs(y_pred - y_true + 1), K.abs(y_pred - y_true - 1)))), axis=-1)
 
-    def __cyclic_mse(self, y_true, y_pred):
+    @classmethod
+    def __cyclic_mse(cls, y_true, y_pred):
         return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
 
-    def __l1_l2_and_perceptual_loss_multiscale(self, y_true, y_pred):
-        return 0.4875 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * self.__perceptual_loss_multiscale(y_true, y_pred)
+    @classmethod
+    def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg):
+        return 0.4875 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred, vgg)
 
     def __l1_and_l2_loss(self, y_true, y_pred):
         alpha = 0.5
         return (1 - alpha) * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + alpha * tf.keras.losses.MeanSquaredError()(y_true, y_pred)
 
-    def __perceptual_loss(self, y_true, y_pred):
-        perceptual_codes_pred = self.vgg(y_pred)
-        perceptual_codes_true = self.vgg(y_true)
+    @classmethod
+    def __perceptual_loss(cls, y_true, y_pred, vgg):
+        perceptual_codes_pred = vgg(y_pred)
+        perceptual_codes_true = vgg(y_true)
 
-        normalized_weights = self.config.perceptual_loss_weights / np.sum(self.config.perceptual_loss_weights)
+        normalized_weights = config.perceptual_loss_weights / np.sum(config.perceptual_loss_weights)
         loss = 0
 
         for i, (p, t) in enumerate(zip(perceptual_codes_pred, perceptual_codes_true)):
@@ -316,16 +323,17 @@ class Converter:
         loss = K.mean(loss)
         return loss
 
-    def __perceptual_loss_multiscale(self, y_true, y_pred):
+    @classmethod
+    def __perceptual_loss_multiscale(cls, y_true, y_pred, vgg):
         loss = 0
 
-        for scale in self.config.perceptual_loss_scales:
+        for scale in config.perceptual_loss_scales:
             y_true_resized = tf.image.resize(y_true, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
             y_pred_resized = tf.image.resize(y_pred, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
 
-            loss += self.__perceptual_loss(y_true_resized, y_pred_resized)
+            loss += cls.__perceptual_loss(y_true_resized, y_pred_resized, vgg)
 
-        return loss / len(self.config.perceptual_loss_scales)
+        return loss / len(config.perceptual_loss_scales)
 
     @classmethod
     def __build_identity_embedding(cls, n_identities, identity_dim):
@@ -398,17 +406,18 @@ class Converter:
 
         return model
 
-    def __build_vgg(self):
-        vgg = vgg16.VGG16(include_top=False, input_shape=(self.config.img_shape[0], self.config.img_shape[1], 3))
+    @classmethod
+    def __build_vgg(cls):
+        vgg = vgg16.VGG16(include_top=False, input_shape=(config.img_shape[0], config.img_shape[1], 3))
 
-        layer_outputs = [vgg.layers[layer_id].output for layer_id in self.config.perceptual_loss_layers]
+        layer_outputs = [vgg.layers[layer_id].output for layer_id in config.perceptual_loss_layers]
         feature_extractor = Model(inputs=vgg.inputs, outputs=layer_outputs)
 
         img = Input(shape=(128, 128, 1))
 
-        if self.config.img_shape[-1] == 1:
+        if config.img_shape[-1] == 1:
             x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
-        elif self.config.img_shape[-1] == 2:
+        elif config.img_shape[-1] == 2:
             x = K.expand_dims(img[:, :, :, 0], -1)
             x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(x)
         # paddings = K.constant([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=tf.int32)
