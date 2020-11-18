@@ -83,8 +83,6 @@ class Converter:
 
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
-            'CosineLearningRateScheduler': CosineLearningRateScheduler,
-            'CustomModelCheckpoint': CustomModelCheckpoint,
             'EvaluationCallback': EvaluationCallback,
         }, compile=False)
 
