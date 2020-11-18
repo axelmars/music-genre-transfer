@@ -122,10 +122,6 @@ class Converter:
         # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
         print('saving model...')
-        if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)
-
-        os.makedirs(model_dir)
 
         self.model.save(os.path.join(model_dir, 'model'))
 
