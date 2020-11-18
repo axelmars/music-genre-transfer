@@ -115,9 +115,11 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(config, config_fd)
 
-        print(f'pickling optimizer with learning rate {self.opt.learning_rate}...')
-        with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
-            pickle.dump(self.opt, opt_fd)
+        del config
+
+        print(f'serializing optimizer with learning rate {self.opt.learning_rate}...')
+        # with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
+        #     pickle.dump(self.opt, opt_fd)
 
         # self.pose_encoder.save(os.path.join(model_dir, 'pose_encoder.h5py'))
         # self.identity_embedding.save(os.path.join(model_dir, 'identity_embedding.h5py'))
@@ -127,7 +129,7 @@ class Converter:
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
 
-        os.makedirs(path)
+        os.makedirs(model_dir)
 
         self.model.save(os.path.join(model_dir, 'model'))
 
@@ -218,8 +220,8 @@ class Converter:
         self.model.summary()
 
         self.model.compile(
-            optimizer=self.opt,
-            loss=self.get_custom_loss()
+            optimizer=self.model.optimizer,
+            loss=self.model.loss
         )
 
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.opt.learning_rate)
