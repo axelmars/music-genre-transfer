@@ -18,7 +18,7 @@ from adamlrm import AdamLRM
 # from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
-from config import default_config as config
+# from config import default_config as config
 from model.evaluation import EvaluationCallback, TrainEncodersEvaluationCallback
 
 
@@ -74,7 +74,7 @@ class Converter:
         # with open(os.path.join(model_dir, 'optimizer.pkl'), 'rb') as opt_fd:
         #     opt = pickle.load(opt_fd)
 
-        config_c = config_dict['config']
+        config = config_dict['config']
         # config = config_dict
         epoch = config_dict['epoch']
 
@@ -85,7 +85,7 @@ class Converter:
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'EvaluationCallback': EvaluationCallback,
             'AdamLRM': AdamLRM,
-            'custom_loss': cls.get_custom_loss()
+            'custom_loss': cls.get_custom_loss(config)
         })
 
         pose_encoder = model.layers[3]
@@ -101,7 +101,7 @@ class Converter:
         # })
 
         if not include_encoders:
-            return Converter(config_c, pose_encoder, identity_embedding, identity_modulation, generator, model, None, epoch)
+            return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, None, epoch)
 
         identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
@@ -186,7 +186,7 @@ class Converter:
         )
         self.model.compile(
             optimizer=self.opt,
-            loss=Converter.get_custom_loss()
+            loss=Converter.get_custom_loss(self.config)
         )
 
         # model.compile(
@@ -276,9 +276,9 @@ class Converter:
         )
 
     @classmethod
-    def get_custom_loss(cls):
+    def get_custom_loss(cls, config):
         # converter = self
-        vgg = cls.__build_vgg()
+        vgg = cls.__build_vgg(config)
 
         def custom_loss(y_true, y_pred):
             amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
@@ -287,7 +287,7 @@ class Converter:
             amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
             phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)
 
-            amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg)
+            amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg, config)
             phase_loss = cls.__cyclic_mse(phase_true, phase_pred)
 
             return 0.5 * amp_loss + 0.5 * phase_loss
@@ -302,15 +302,16 @@ class Converter:
         return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
 
     @classmethod
-    def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg):
-        return 0.4875 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred, vgg)
+    def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
+        return 0.4875 * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + 0.5 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred,
+                                                                                                                                                                                   vgg, config)
 
     def __l1_and_l2_loss(self, y_true, y_pred):
         alpha = 0.5
         return (1 - alpha) * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + alpha * tf.keras.losses.MeanSquaredError()(y_true, y_pred)
 
     @classmethod
-    def __perceptual_loss(cls, y_true, y_pred, vgg):
+    def __perceptual_loss(cls, y_true, y_pred, vgg, config):
         perceptual_codes_pred = vgg(y_pred)
         perceptual_codes_true = vgg(y_true)
 
@@ -324,14 +325,14 @@ class Converter:
         return loss
 
     @classmethod
-    def __perceptual_loss_multiscale(cls, y_true, y_pred, vgg):
+    def __perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
         loss = 0
 
         for scale in config.perceptual_loss_scales:
             y_true_resized = tf.image.resize(y_true, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
             y_pred_resized = tf.image.resize(y_pred, (scale, scale), method=tf.image.ResizeMethod.BILINEAR)
 
-            loss += cls.__perceptual_loss(y_true_resized, y_pred_resized, vgg)
+            loss += cls.__perceptual_loss(y_true_resized, y_pred_resized, vgg, config)
 
         return loss / len(config.perceptual_loss_scales)
 
@@ -407,7 +408,7 @@ class Converter:
         return model
 
     @classmethod
-    def __build_vgg(cls):
+    def __build_vgg(cls, config):
         vgg = vgg16.VGG16(include_top=False, input_shape=(config.img_shape[0], config.img_shape[1], 3))
 
         layer_outputs = [vgg.layers[layer_id].output for layer_id in config.perceptual_loss_layers]
