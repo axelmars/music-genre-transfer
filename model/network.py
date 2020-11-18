@@ -108,6 +108,11 @@ class Converter:
     def save(self, model_dir, epoch):
         print('saving models...')
 
+        # if os.path.exists(model_dir):
+        #     shutil.rmtree(model_dir)
+        #
+        # os.makedirs(model_dir)
+
         print(f'pickling config, epoch {epoch}...')
         config = {'config': self.config, 'epoch': epoch}
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
