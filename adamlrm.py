@@ -318,4 +318,6 @@ class AdamLRM(optimizer_v2.OptimizerV2):
             if isinstance(config["learning_rate"], dict):
                 config["learning_rate"] = optimizer_v2.learning_rate_schedule.deserialize(
                     config["learning_rate"], custom_objects=custom_objects)
-        return cls(config)
+        optimizer = cls(config)
+        optimizer._hypers_created = True
+        return optimizer
