@@ -223,7 +223,7 @@ class Converter:
         #     loss=self.model.get_custom_loss
         # )
 
-        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.model.optimizer.lr)
+        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.model.optimizer.learning_rate)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
