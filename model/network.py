@@ -113,8 +113,6 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(config, config_fd)
 
-        del config
-
         print(f'serializing optimizer with learning rate {self.opt.learning_rate}...')
         # with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
         #     pickle.dump(self.opt, opt_fd)
