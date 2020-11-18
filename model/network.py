@@ -78,7 +78,7 @@ class Converter:
         # config = config_dict
         epoch = config_dict['epoch']
 
-        print(f'loaded optimizer with learning rate {opt.learning_rate}')
+        # print(f'loaded optimizer with learning rate {opt.learning_rate}')
         print(f'last saved epoch: {epoch}')
 
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
