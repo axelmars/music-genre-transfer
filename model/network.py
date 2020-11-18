@@ -186,7 +186,7 @@ class Converter:
         )
         self.model.compile(
             optimizer=self.opt,
-            loss=self.get_custom_loss()
+            loss=Converter.get_custom_loss()
         )
 
         # model.compile(
