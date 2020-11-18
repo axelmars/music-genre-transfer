@@ -85,7 +85,7 @@ class Converter:
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'EvaluationCallback': EvaluationCallback,
             'AdamLRM': AdamLRM,
-        }, compile=False)
+        })
 
         pose_encoder = model.layers[3]
         identity_embedding = model.layers[2]
@@ -219,7 +219,7 @@ class Converter:
 
         self.model.compile(
             optimizer=self.model.optimizer,
-            loss=self.model.loss
+            loss=self.model.get_custom_loss
         )
 
         lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.opt.learning_rate)
