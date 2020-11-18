@@ -84,6 +84,7 @@ class Converter:
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
             'EvaluationCallback': EvaluationCallback,
+            'AdamLRM': AdamLRM,
         }, compile=False)
 
         pose_encoder = model.layers[3]
