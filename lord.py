@@ -105,7 +105,7 @@ def split_samples(args):
 
 def train(args):
 	assets = AssetManager(args.base_dir)
-	if args.resume:
+	if args.resume != -1:
 		model_dir = assets.get_model_dir(args.model_name)
 		tensorboard_dir = assets.get_tensorboard_dir(args.model_name)
 	else:
