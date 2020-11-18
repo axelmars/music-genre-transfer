@@ -1,6 +1,6 @@
 import os
 import pickle
-import imageio
+import shutil
 
 import numpy as np
 import tensorflow as tf
@@ -9,15 +9,12 @@ from keras import backend as K
 
 from keras import optimizers, losses, regularizers
 # from tensorflow.python.keras.optimizer_v2 import optimizer_v2
-from keras.optimizers import Optimizer
 from keras.layers import Conv2D, Dense, UpSampling2D, LeakyReLU, Activation
 from keras.layers import Layer, Input, Reshape, Lambda, Flatten, Concatenate, Embedding, GaussianNoise
 from keras.models import Model, load_model
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
 from keras.applications import vgg16
 from adamlrm import AdamLRM
-from keras.utils import custom_object_scope
-from keras_lr_multiplier import LRMultiplier
 # from config import default_config
 # from keras_lr_multiplier.backend import optimizers
 # from tensorflow.python.framework.errors_impl import InvalidArgumentError
@@ -82,6 +79,7 @@ class Converter:
         epoch = config_dict['epoch']
 
         print(f'loaded optimizer with learning rate {opt.learning_rate}')
+        print(f'last saved epoch: {epoch}')
 
         model = load_model(os.path.join(model_dir, 'model'), custom_objects={
             'AdaptiveInstanceNormalization': AdaptiveInstanceNormalization,
@@ -126,6 +124,11 @@ class Converter:
         # self.identity_modulation.save(os.path.join(model_dir, 'identity_modulation.h5py'))
         # self.generator.save(os.path.join(model_dir, 'generator.h5py'))
         print('saving model...')
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+
+        os.makedirs(path)
+
         self.model.save(os.path.join(model_dir, 'model'))
 
         # if self.identity_encoder:
