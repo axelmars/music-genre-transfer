@@ -120,7 +120,7 @@ class Converter:
         with open(os.path.join(model_dir, 'config.pkl'), 'wb') as config_fd:
             pickle.dump(config_dict, config_fd)
 
-        print(f'serializing optimizer with learning rate {self.opt.learning_rate}...')
+        print(f'serializing optimizer with learning rate {self.model.optimizer.learning_rate}...')
         # with open(os.path.join(model_dir, 'optimizer.pkl'), 'wb') as opt_fd:
         #     pickle.dump(self.opt, opt_fd)
 
@@ -215,7 +215,7 @@ class Converter:
             verbose=1
         )
 
-    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
+    def resume_train(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir, resume_epoch):
         self.model.summary()
 
         # self.model.compile(
@@ -223,7 +223,7 @@ class Converter:
         #     loss=self.model.get_custom_loss
         # )
 
-        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=self.epoch, starting_lr=self.model.optimizer.learning_rate)
+        lr_scheduler = CosineLearningRateScheduler(max_lr=1e-4, min_lr=1e-5, total_epochs=n_epochs, starting_epoch=resume_epoch, starting_lr=self.model.optimizer.learning_rate)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=0.01, patience=100, verbose=1)
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
@@ -578,7 +578,7 @@ class CosineLearningRateScheduler(Callback):
         K.set_value(self.model.optimizer.lr, self.starting_lr)
 
     def on_epoch_end(self, epoch, logs=None):
-        fraction = (self.starting_epoch + 1 + epoch) / self.total_epochs
+        fraction = (self.starting_epoch + epoch) / self.total_epochs
         lr = self.min_lr + 0.5 * (self.max_lr - self.min_lr) * (1 + np.cos(fraction * np.pi))
 
         K.set_value(self.model.optimizer.lr, lr)

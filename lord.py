@@ -137,7 +137,7 @@ def train(args):
 	identities = identities[idx]
 	poses = identities[idx]
 
-	if args.resume:
+	if args.resume != -1:
 		converter = Converter.load(model_dir, include_encoders=False)
 
 		converter.resume_train(
@@ -149,6 +149,7 @@ def train(args):
 
 			model_dir=model_dir,
 			tensorboard_dir=tensorboard_dir,
+			resume_epoch=args.resume
 		)
 
 	else:
