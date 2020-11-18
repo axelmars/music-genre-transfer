@@ -279,7 +279,7 @@ class Converter:
 
         def custom_loss(y_true, y_pred):
             amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
-            phase_true = K.expand_dims(y_true[:, :, :, 1], axis=-1)
+            phase_true = K.expand_dim   s(y_true[:, :, :, 1], axis=-1)
 
             amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
             phase_pred = K.expand_dims(y_pred[:, :, :, 1], axis=-1)

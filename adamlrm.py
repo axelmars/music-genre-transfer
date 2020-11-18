@@ -53,6 +53,7 @@ class AdamLRM(optimizer_v2.OptimizerV2):
                  amsgrad=False,
                  lr_multiplier={},
                  name='AdamLRM',
+                 functional_1=10,
                  **kwargs):
         r"""Construct a new Adam optimizer with learning rate multipliers.
 
@@ -137,8 +138,10 @@ class AdamLRM(optimizer_v2.OptimizerV2):
         values across different invocations of optimizer functions.
         @end_compatibility
         """
-
+        kwargs = {k: kwargs[k] for k in kwargs if k in ["clipnorm", "clipvalue", "lr", "decay"]}
         super(AdamLRM, self).__init__(name, **kwargs)
+        if lr_multiplier is None:
+            lr_multiplier = {}
         self._set_hyper('learning_rate', kwargs.get('lr', learning_rate))
         self._set_hyper('decay', self._initial_decay)
         self._set_hyper('beta_1', beta_1)
@@ -291,3 +294,28 @@ class AdamLRM(optimizer_v2.OptimizerV2):
         for k in self._lrm_names:
             config[k] = self._serialize_hyperparameter(f'lrm_{k}')
         return config
+
+    @classmethod
+    def from_config(cls, config, custom_objects=None):
+        """Creates an optimizer from its config.
+
+        This method is the reverse of `get_config`,
+        capable of instantiating the same optimizer from the config
+        dictionary.
+
+        Arguments:
+            config: A Python dictionary, typically the output of get_config.
+            custom_objects: A Python dictionary mapping names to additional Python
+              objects used to create this optimizer, such as a function used for a
+              hyperparameter.
+
+        Returns:
+            An optimizer instance.
+        """
+        if "lr" in config:
+            config["learning_rate"] = config.pop("lr")
+        if "learning_rate" in config:
+            if isinstance(config["learning_rate"], dict):
+                config["learning_rate"] = optimizer_v2.learning_rate_schedule.deserialize(
+                    config["learning_rate"], custom_objects=custom_objects)
+        return cls(config)
