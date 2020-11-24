@@ -32,7 +32,7 @@ class Inferer:
         self.__overlap = args.is_overlapping
 
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
-        self.__converter.pose_encoder.compile()
+        # self.__converter.pose_encoder.compile()
 
     def infer(self):
         with open(os.path.join(self.__base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
@@ -221,7 +221,7 @@ def binomial_mask(a=1, x=1, im_shape=(128, 128, 3)):
     ser_array_squash = np.concatenate((ser_array_squash[: half], 1 - ser_array_squash[half:]))
     mask = np.zeros((im_shape[0], 2 * im_shape[1] - int(.25 * im_shape[1]), 3))
     mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1]), :] = np.ones((im_shape[0], int(.75 * im_shape[1]), 3))
-    mask[:, int(.75 * im_shape[1]): im_shape[1], :] = np.tile(ser_array_squash, (im_shape[0], 1, 3))
+    mask[:, int(.75 * im_shape[1]): im_shape[1], :] = np.tile(ser_array_squash, (im_shape[0], 1, 1))
     return mask
 
 
