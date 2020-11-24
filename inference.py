@@ -44,7 +44,7 @@ class Inferer:
         genre_ids = np.array(genre_ids)
         spec_paths = np.array(spec_paths)
         genre_ids[genre_ids == CLASS_2_SUB] = CLASS_2_SUB
-        print('genre_ids class 2 shape: ', np.count_nonzero(genre_ids == 1))
+        print('genre_ids class 2 shape: ', np.count_nonzero(genre_ids == CLASS_2_SUB))
         genre_ids[genre_ids == CLASS_1_SUB] = CLASS_1_SUB
         if not self.__include_encoders:
             indices = np.load(os.path.join(self.__base_dir, 'bin/train_idx.npy'))
