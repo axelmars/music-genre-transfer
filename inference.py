@@ -181,15 +181,15 @@ class Inferer:
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
         # spec = (spec * -80.0 + 80.0) * -1
         spec[:, :, 0] = (default_config['max_level_db'] - default_config['min_level_db']) * spec[:, :, 0] + default_config['min_level_db']
-        spec[:, :, 1] = (default_config['max_level_db'] - default_config['min_level_db']) * spec[:, :, 1] + default_config['min_level_db']
+        spec[:, :, 1] = (default_config['max_level_phase'] - default_config['min_level_phase']) * spec[:, :, 1] + default_config['min_level_phase']
         print('denormalized max: ', np.max(spec), ' min: ', np.min(spec))
         # print('denormalized: ', spec)
         spec[:, :, 0] = librosa.feature.inverse.db_to_power(spec[:, :, 0])
-        amp = librosa.feature.inverse.mel_to_stft(spec[:, :, 0])
-        phase = librosa.feature.inverse.mel_to_stft(spec[:, :, 1])
-        S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
+        audio = librosa.feature.inverse.mel_to_audio(spec[:, :, 0])
+        # phase = librosa.feature.inverse.mel_to_stft(spec[:, :, 1])
+        # S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
         print('performing iSTFT...')
-        audio = librosa.istft(S)
+        # audio = librosa.istft(S)
         print('iSTFT done.')
         # print('starting griffin-lim...')
         # audio = librosa.griffinlim(S)
