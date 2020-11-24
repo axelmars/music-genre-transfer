@@ -43,9 +43,9 @@ class Inferer:
 
         genre_ids = np.array(genre_ids)
         spec_paths = np.array(spec_paths)
-        genre_ids[genre_ids == CLASS_2_SUB] = 1
+        genre_ids[genre_ids == CLASS_2_SUB] = CLASS_2_SUB
         print('genre_ids class 2 shape: ', np.count_nonzero(genre_ids == 1))
-        genre_ids[genre_ids == CLASS_1_SUB] = 0
+        genre_ids[genre_ids == CLASS_1_SUB] = CLASS_1_SUB
         if not self.__include_encoders:
             indices = np.load(os.path.join(self.__base_dir, 'bin/train_idx.npy'))
         else:
@@ -53,16 +53,16 @@ class Inferer:
         sample_paths = spec_paths[indices]
         sample_genres = genre_ids[indices]
         print('sample_paths shape: ', sample_paths.shape)
-        sample_paths_0 = sample_paths[sample_genres == 0]
-        sample_paths_1 = sample_paths[sample_genres == 1]
+        sample_paths_0 = sample_paths[sample_genres == CLASS_1_SUB]
+        sample_paths_1 = sample_paths[sample_genres == CLASS_2_SUB]
         print('sample_paths_1 shape: ', sample_paths_1.shape)
         sample_paths_0 = sample_paths_0[np.random.choice(sample_paths_0.shape[0], size=self.__num_samples, replace=False)]
         print('sample_paths_0 shape: ', sample_paths_0.shape)
         sample_paths_1 = sample_paths_1[np.random.choice(sample_paths_1.shape[0], size=self.__num_samples, replace=False)]
-        self._transform(sample_paths_0, 0)
-        self._transform(sample_paths_1, 1)
-        self._transform(sample_paths_0, 0, sample_paths_1, 1)
-        self._transform(sample_paths_1, 1, sample_paths_0, 0)
+        self._transform(sample_paths_0, CLASS_1_SUB)
+        self._transform(sample_paths_1, CLASS_2_SUB)
+        self._transform(sample_paths_0, CLASS_1_SUB, sample_paths_1, CLASS_2_SUB)
+        self._transform(sample_paths_1, CLASS_2_SUB, sample_paths_0, CLASS_1_SUB)
 
     def _transform(self, sample_paths, original_genre, dest_sample_paths=None, destination_genre=None):
         for i, sample_path in enumerate(sample_paths):
