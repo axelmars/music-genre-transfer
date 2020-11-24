@@ -162,33 +162,57 @@ def normalize8(I):
 def denormalize8(I):
     I = (())
 
+def binomial_mask(a=1, x=1, im_shape=(128, 128, 3)):
+    n = int(.25 * im_shape[1]) - 1
+    term = pow(a, n)
+    # print(term, end=" ")
+    series_list = [term]
+    # Computing and printing remaining terms
+    for i in range(1, n + 1):
+        # Find current term using previous terms
+        # We increment power of x by 1, decrement
+        # power of a by 1 and compute nCi using
+        # previous term by multiplying previous
+        # term with (n - i + 1)/i
+        term = int(term * x * (n - i + 1) / (i * a))
+        series_list.append(term)
+    ser_array = np.array(series_list)
+    ser_array_squash = ser_array / np.max(ser_array) / 2
+    half = int(n / 2)
+    ser_array_squash = np.concatenate((ser_array_squash[: half], 1 - ser_array_squash[half:]))[None, :, None]
+    print(ser_array_squash.shape)
+    mask = np.zeros((im_shape[0], 2 * im_shape[1] - int(.25 * im_shape[1]), 3))
+    mask[:, im_shape[1]: im_shape[1] + int(.75 * im_shape[1]), :] = np.ones((im_shape[0], int(.75 * im_shape[1]), 3))
+    mask[:, int(.75 * im_shape[1]): im_shape[1], :] = np.tile(ser_array_squash, (im_shape[0], 1, 1))
+    return mask
 
 if __name__ == '__main__':
-    AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
-    # print(AudioSegment.ffmpeg)
-    AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
-    # path = r'C:\Users\Avi\Desktop\Uni\ResearchProjectLab\code_samples\music-genre-transfer'
-    # os.chdir(path)
-    # dirs = os.listdir(path)
-    # for file in dirs:
-    #     print(file)
-    # sound = AudioSegment.from_mp3('007713.mp3')
-    # sound.export('waved_acous.wav', format='wav')
-    samples, sample_rate = librosa.load('061679.wav', sr=22050)
-
-    # stft_specto = np.abs(librosa.stft(y=samples))
-    spectro = librosa.stft(y=samples)
-    phase_spectro = librosa.feature.melspectrogram(S=np.angle(spectro), sr=sample_rate)
-    amplitude_spectro = librosa.feature.melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate)
-    amplitude_spectro = librosa.power_to_db(amplitude_spectro)
-
-    p_a_spetro = np.zeros((128, 128, 2), dtype=np.float32)
-
-    print(p_a_spetro.dtype, p_a_spetro.shape)
-    print(amplitude_spectro.dtype, amplitude_spectro.shape)
-
-    np.save('spectrogram_ampl_phase.npy', p_a_spetro)
-    np.save('spectrogram_ampl.npy', amplitude_spectro)
+    # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
+    # # print(AudioSegment.ffmpeg)
+    # AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
+    # # path = r'C:\Users\Avi\Desktop\Uni\ResearchProjectLab\code_samples\music-genre-transfer'
+    # # os.chdir(path)
+    # # dirs = os.listdir(path)
+    # # for file in dirs:
+    # #     print(file)
+    # # sound = AudioSegment.from_mp3('007713.mp3')
+    # # sound.export('waved_acous.wav', format='wav')
+    # samples, sample_rate = librosa.load('061679.wav', sr=22050)
+    #
+    # # stft_specto = np.abs(librosa.stft(y=samples))
+    # spectro = librosa.stft(y=samples)
+    # phase_spectro = librosa.feature.melspectrogram(S=np.angle(spectro), sr=sample_rate)
+    # amplitude_spectro = librosa.feature.melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate)
+    # amplitude_spectro = librosa.power_to_db(amplitude_spectro)
+    #
+    # p_a_spetro = np.zeros((128, 128, 2), dtype=np.float32)
+    #
+    # print(p_a_spetro.dtype, p_a_spetro.shape)
+    # print(amplitude_spectro.dtype, amplitude_spectro.shape)
+    #
+    # np.save('spectrogram_ampl_phase.npy', p_a_spetro)
+    # np.save('spectrogram_ampl.npy', amplitude_spectro)
+    binomial_mask()
     # out_spectro = librosa.feature.inverse.mel_to_stft(mel_phase_spectro)
     # print(out_spectro.dtype, out_spectro.shape)
     # print(np.allclose(out_spectro, phase_spectro))
