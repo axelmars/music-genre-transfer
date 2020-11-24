@@ -34,7 +34,7 @@ class Inferer:
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
         # self.__converter.pose_encoder.compile()
 
-    def infer(self):
+    def infer(self, identity=True, transform=False):
         with open(os.path.join(self.__base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
             genre_ids = pickle.load(f2)
 
@@ -59,8 +59,9 @@ class Inferer:
         sample_paths_0 = sample_paths_0[np.random.choice(sample_paths_0.shape[0], size=self.__num_samples, replace=False)]
         print('sample_paths_0 shape: ', sample_paths_0.shape)
         sample_paths_1 = sample_paths_1[np.random.choice(sample_paths_1.shape[0], size=self.__num_samples, replace=False)]
-        self._transform(sample_paths_0, CLASS_1_SUB)
-        self._transform(sample_paths_1, CLASS_2_SUB)
+        if identity:
+            self._transform(sample_paths_0, CLASS_1_SUB)
+            self._transform(sample_paths_1, CLASS_2_SUB)
         self._transform(sample_paths_0, CLASS_1_SUB, sample_paths_1, CLASS_2_SUB)
         self._transform(sample_paths_1, CLASS_2_SUB, sample_paths_0, CLASS_1_SUB)
 
@@ -97,8 +98,7 @@ class Inferer:
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
                     imwrite(os.path.join(self.__base_dir, 'samples', f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) +
-                                         '.tif'),
-                            full_spec)
+                                         '.tif'), full_spec)
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
@@ -234,10 +234,10 @@ def main():
     parser.add_argument('-it', '--is-test', type=int, required=True)
     parser.add_argument('-io', '--is-overlapping', type=int, required=True)
     parser.add_argument('-dd', '--dataset-dir', type=str, required=True)
-
+    parser.add_argument('-id', '--identity', type=str, required=True)
     args = parser.parse_args()
     inferer = Inferer(args)
-    inferer.infer()
+    inferer.infer(identity=args.identity)
 
 
 if __name__ == '__main__':
