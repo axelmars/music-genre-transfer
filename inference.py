@@ -16,7 +16,7 @@ CLASS_1_ID = 17
 CLASS_2_ID = 12
 CLASS_1_SUB = 0
 CLASS_2_SUB = 4
-paddings = [[0, 0], [0, 0], [0, 1]]
+paddings = [[0, 0], [0, 0], [1, 0]]
 
 
 class Inferer:
@@ -125,10 +125,8 @@ class Inferer:
 
     def _concatenate_overlap(self, imgs):
         mask = binomial_mask()
-        first_in_pair = np.zeros((128, imgs[0].shape[1] + 96, 3), dtype=np.float32)
-        second_in_pair = np.zeros((128, imgs[0].shape[1] + 96, 3), dtype=np.float32)
-        first_in_pair[:, :, 1:] = np.concatenate((imgs[0], np.zeros((128, 96, 2))), axis=1)
-        second_in_pair[:, :, 1:] = np.concatenate((np.zeros((128, 96, 2)), imgs[1]), axis=1)
+        first_in_pair = np.concatenate((imgs[0], np.zeros((128, 96, 3))), axis=1)
+        second_in_pair = np.concatenate((np.zeros((128, 96, 3)), imgs[1]), axis=1)
         merge = (1 - mask) * first_in_pair + mask * second_in_pair
         last_img = merge[:, -128:, :]
         full_spec = np.zeros((128, 1280, 3), dtype=np.float32)
@@ -136,8 +134,8 @@ class Inferer:
         print('length imgs: ', len(imgs))
         for i, img in zip(range((128 - 32) * 2, 1280 - 128 + 1, 96), imgs[2:]):
             # print(i)
-            first_in_pair[:, :, 1:] = np.concatenate((last_img, np.zeros((128, 96, 3))), axis=1)
-            second_in_pair[:, :, 1:] = np.concatenate((np.zeros((128, 96, 3)), img), axis=1)
+            first_in_pair = np.concatenate((last_img, np.zeros((128, 96, 3))), axis=1)
+            second_in_pair = np.concatenate((np.zeros((128, 96, 3)), img), axis=1)
             merge = (1 - mask) * first_in_pair + mask * second_in_pair
             last_img = merge[:, -128:, :]
             full_spec[:, i - 96: i + 128, :] = merge
