@@ -234,7 +234,7 @@ def main():
     parser.add_argument('-it', '--is-test', type=int, required=True)
     parser.add_argument('-io', '--is-overlapping', type=int, required=True)
     parser.add_argument('-dd', '--dataset-dir', type=str, required=True)
-    parser.add_argument('-id', '--identity', type=str, required=True)
+    parser.add_argument('-id', '--identity', type=int, required=True)
     args = parser.parse_args()
     inferer = Inferer(args)
     inferer.infer(identity=args.identity)
