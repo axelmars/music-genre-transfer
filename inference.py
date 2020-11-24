@@ -14,8 +14,8 @@ from pathlib import Path
 SAMPLE_RATE = 22050
 CLASS_1_ID = 17
 CLASS_2_ID = 12
-CLASS_1_SUB = 0
-CLASS_2_SUB = 4
+CLASS_1_SUB = 1
+CLASS_2_SUB = 8
 paddings = [[0, 0], [0, 0], [1, 0]]
 
 

@@ -599,20 +599,29 @@ def convert_paths_to_str():
         pickle.dump(str_spec_paths, f1)
 
 
+def count_genres():
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
+
+    for i in np.unique(genre_ids):
+        print(f'{i}: {np.count_nonzero(genre_ids == i)}')
+
+
 if __name__ == '__main__':
     # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    create_clustered_subgenres(vgg_features=True)
-    # finetune_clustering()
-    clustering_analysis()
-    # get_pc_eigenvalues()
-    # cluster()
-    # visualise_reduction()
+    # create_clustered_subgenres(vgg_features=True)
+    # # finetune_clustering()
+    # clustering_analysis()
+    # # get_pc_eigenvalues()
+    # # cluster()
+    # # visualise_reduction()
+    # # create_genres_only()
+    # # convert_paths_to_str()
     # create_genres_only()
-    # convert_paths_to_str()
-    create_genres_only()
 
+    count_genres()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)
