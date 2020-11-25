@@ -299,7 +299,12 @@ class Converter:
 
     @classmethod
     def __cyclic_mse(cls, y_true, y_pred):
-        return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
+        rad_true = y_true * 2 * np.pi
+        rad_pred = y_pred * 2 * np.pi
+        dist_sin = K.square(np.sin(rad_pred) - np.sin(rad_true))
+        dist_cos = K.square(np.cos(rad_pred) - np.cos(rad_true))
+        # return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
+        return K.mean(dist_sin + dist_cos)
 
     @classmethod
     def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
