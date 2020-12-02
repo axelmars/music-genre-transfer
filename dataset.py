@@ -406,7 +406,7 @@ class SimpleFMA(DataSet):
 
 		# unique_identity_ids = list(set(identity_ids))
 
-		imgs = np.empty(shape=(len(img_paths), 128, 128, 2), dtype=np.float32)
+		imgs = np.empty(shape=(len(img_paths), 128, 256, 2), dtype=np.float32)
 		identities = np.empty(shape=(len(img_paths), ), dtype=np.uint32)
 		poses = np.zeros(shape=(len(img_paths), ), dtype=np.uint32)
 

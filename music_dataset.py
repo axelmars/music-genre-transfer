@@ -40,7 +40,7 @@ MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_m
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 FEATURES_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/features.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
-OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-t'
+OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-pl'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
 
 
@@ -159,7 +159,7 @@ def list_tracks():
     return track_paths, genre_ids, track_ids
 
 
-def create_spectrograms(overlap=False, include_phase=True):
+def create_spectrograms(overlap=False, include_phase=True, width=128):
     """
     loads tracks according to given ids and saves their spectrograms.
     :param tracks_ids:
@@ -203,16 +203,16 @@ def create_spectrograms(overlap=False, include_phase=True):
         track_id = track_path[-10:-4]
         if not overlap:
             if include_phase:
-                for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[-1], 128)], axis=-1)):
-                    if partition.shape[-1] == 128:
+                for i, partition in enumerate(np.split(S_dB, [x for x in range(width, S_dB.shape[-1], width)], axis=-1)):
+                    if partition.shape[-1] == width:
                         im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.tif')
                         imwrite(im_save_path, partition)
                         # imwrite(im_save_path, partition)
                         spec_paths.append(im_save_path)
                         split_genres_ids.append(genre_id)
             else:
-                for i, partition in enumerate(np.split(S_dB, [x for x in range(128, S_dB.shape[1], 128)], axis=1)):
-                    if partition.shape[1] == 128:
+                for i, partition in enumerate(np.split(S_dB, [x for x in range(width, S_dB.shape[1], width)], axis=1)):
+                    if partition.shape[1] == width:
                         im_save_path = os.path.join(SPECS_OUTPUT_DIR, track_id + str(i) + '.tif')
                         imwrite(im_save_path, partition)
                         # imwrite(im_save_path, partition)
@@ -220,7 +220,7 @@ def create_spectrograms(overlap=False, include_phase=True):
                         split_genres_ids.append(genre_id)
         else:
             if include_phase:
-                for i, partition in enumerate([S_dB[:, j: j + 128, :] for j in range(0, S_dB.shape[1] - 128, 96)]):
+                for i, partition in enumerate([S_dB[:, j: j + width, :] for j in range(0, S_dB.shape[1] - width, width - 32)]):
                     Path(OVERLAP_SPECS_OUTPUT_DIR).mkdir(exist_ok=True)
                     if i < 10:
                         num = '0' + str(i)
@@ -232,9 +232,10 @@ def create_spectrograms(overlap=False, include_phase=True):
                     # imwrite(im_save_path, partition)
                     spec_paths.append(im_save_path)
                     split_genres_ids.append(genre_id)
+                    # print(partition.shape)
             else:
                 # 0.25 overlap ==> 32 pixels overlap
-                for i, partition in enumerate([S_dB[:, j: j + 128] for j in range(0, S_dB.shape[1] - 128, 96)]):
+                for i, partition in enumerate([S_dB[:, j: j + 128] for j in range(0, S_dB.shape[1] - width, width - 32)]):
                     Path(OVERLAP_SPECS_OUTPUT_DIR).mkdir(exist_ok=True)
                     if i < 10:
                         num = '0' + str(i)
@@ -384,9 +385,9 @@ def create_clustered_subgenres(vgg_features=True):
         count_class_1 = 0
         count_class_2 = 0
         kmeans_1 = MiniBatchKMeans(n_clusters=4)
-        kmeans_2 = MiniBatchKMeans(n_clusters=6)
+        kmeans_2 = MiniBatchKMeans(n_clusters=5)
         pca_1 = PCA(n_components=8)
-        pca_2 = PCA(n_components=5)
+        pca_2 = PCA(n_components=6)
         for track_path, genre_id in zip(track_paths, genre_ids):
             spec_path = Path(OVERLAP_SPECS_OUTPUT_DIR, track_path[-10: -4] + '00.npy')
             try:
@@ -399,7 +400,7 @@ def create_clustered_subgenres(vgg_features=True):
             if genre_id == CLASS_1_ID:
                 count_class_1 += 1
                 batch_1.append(img_features)
-                if count_class_1 % 600 == 0:
+                if count_class_1 % 305 == 0:
                     print('performing partial fit for genre 1...')
                     # kmeans_1.partial_fit(np.array(batch_1, dtype=np.float32))
                     clustering_processing(batch_1, pca_1, kmeans_1)
@@ -407,7 +408,7 @@ def create_clustered_subgenres(vgg_features=True):
             if genre_id == CLASS_2_ID:
                 count_class_2 += 1
                 batch_2.append(img_features)
-                if count_class_2 % 605 == 0:
+                if count_class_2 % 305 == 0:
                     print('performing partial fit for genre 2...')
                     # kmeans_2.partial_fit(np.array(batch_2, dtype=np.float32))
                     clustering_processing(batch_2, pca_2, kmeans_2)
@@ -611,17 +612,18 @@ if __name__ == '__main__':
     # list_tracks()
     # for iden in genre_ids:
     #     print(iden)
-    # create_clustered_subgenres(vgg_features=True)
+    create_clustered_subgenres(vgg_features=True)
     # # finetune_clustering()
-    # clustering_analysis()
-    # # get_pc_eigenvalues()
-    # # cluster()
-    # # visualise_reduction()
-    # # create_genres_only()
-    # # convert_paths_to_str()
+    clustering_analysis()
+    # get_pc_eigenvalues()
+    # cluster()
+    # visualise_reduction()
     # create_genres_only()
-
-    count_genres()
+    # convert_paths_to_str()
+    # create_genres_only()
+    # set_non_clustered_genres()
+    # create_spectrograms(overlap=True, include_phase=True, width=256)
+    # count_genres()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)
