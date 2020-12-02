@@ -402,6 +402,7 @@ class SimpleFMA(DataSet):
 		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
 			genre_ids = pickle.load(f2)
 
+		assert len(img_paths) == len(genre_ids)
 		# img_paths, identity_ids = self.__list_imgs()
 
 		# unique_identity_ids = list(set(identity_ids))
