@@ -157,7 +157,7 @@ class Inferer:
 
     def _combine_overlapping_specs(self, sample_path):
         img_name = re.search(r'\d+\.npy', sample_path).group(0)
-        img_path = os.path.join(self.__dataset_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
+        img_path = os.path.join(self.__dataset_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-ol', img_name)
         full_img = []
         for j in range(13):
             if j < 10:
