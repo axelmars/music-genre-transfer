@@ -179,10 +179,8 @@ class Inferer:
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
-        print(spec[:, :, 0])
-        print(spec.shape)
-        amp = (41 - (-100)) * spec[:, :, 0] + (-100)
-        phase = (0.302 - (-0.303)) * spec[:, :, 1] + (-0.303)
+        amp = (41 - (-100)) * spec[:, :, 1] + (-100)
+        phase = (0.302 - (-0.303)) * spec[:, :, 2] + (-0.303)
 
         print('denormalized max amplitude: ', np.max(amp), ' min: ', np.min(amp))
         print('denormalized max phase: ', np.max(phase), ' min: ', np.min(phase))
