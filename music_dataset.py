@@ -384,8 +384,8 @@ def create_clustered_subgenres(vgg_features=True):
         batch_2 = []
         count_class_1 = 0
         count_class_2 = 0
-        kmeans_1 = MiniBatchKMeans(n_clusters=4)
-        kmeans_2 = MiniBatchKMeans(n_clusters=5)
+        kmeans_1 = MiniBatchKMeans(n_clusters=3)
+        kmeans_2 = MiniBatchKMeans(n_clusters=4)
         pca_1 = PCA(n_components=8)
         pca_2 = PCA(n_components=6)
         for track_path, genre_id in zip(track_paths, genre_ids):
@@ -613,6 +613,7 @@ if __name__ == '__main__':
     # for iden in genre_ids:
     #     print(iden)
     create_clustered_subgenres(vgg_features=True)
+    create_genres_only()
     # # finetune_clustering()
     clustering_analysis()
     # get_pc_eigenvalues()
@@ -620,7 +621,6 @@ if __name__ == '__main__':
     # visualise_reduction()
     # create_genres_only()
     # convert_paths_to_str()
-    # create_genres_only()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True, width=256)
     # count_genres()

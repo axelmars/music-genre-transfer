@@ -34,7 +34,7 @@ class Inferer:
         self.__converter = Converter.load(model_dir, include_encoders=self.__include_encoders)
         # self.__converter.pose_encoder.compile()
 
-    def infer(self, identity=True, transform=False):
+    def infer(self, identity=True):
         with open(os.path.join(self.__base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
             genre_ids = pickle.load(f2)
 
@@ -180,20 +180,23 @@ class Inferer:
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
         # spec = (spec * -80.0 + 80.0) * -1
-        spec[:, :, 1] = (default_config['max_level_db'] - default_config['min_level_db']) * spec[:, :, 1] + default_config['min_level_db']
-        spec[:, :, 2] = (default_config['max_phase'] - default_config['min_phase']) * spec[:, :, 2] + default_config['min_phase']
+        amp = (41 - (-100)) * spec[:, :, 0] + (-100)
+        phase = (0.302 - (-0.303)) * spec[:, :, 1] + (-0.303)
+
         print('denormalized max: ', np.max(spec), ' min: ', np.min(spec))
         # print('denormalized: ', spec)
-        spec[:, :, 1] = librosa.feature.inverse.db_to_power(spec[:, :, 1])
-        audio = librosa.feature.inverse.mel_to_audio(spec[:, :, 1])
-        # phase = librosa.feature.inverse.mel_to_stft(spec[:, :, 1])
-        # S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
+        amp = librosa.feature.inverse.db_to_power(amp)
+        amp = librosa.feature.inverse.mel_to_stft(amp)
+        # audio = librosa.feature.inverse.mel_to_audio(amp)
+        # audio_orig = librosa.feature.inverse.mel_to_audio(amp_orig)
+
+        phase = librosa.feature.inverse.mel_to_stft(phase, power=1)
+
+        S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
+
         print('performing iSTFT...')
-        # audio = librosa.istft(S)
+        audio = librosa.istft(S)
         print('iSTFT done.')
-        # print('starting griffin-lim...')
-        # audio = librosa.griffinlim(S)
-        # print('griffin-lim done.')
 
         if genre_transform:
             wavfile.write(os.path.join(self.__base_dir, 'samples', f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
