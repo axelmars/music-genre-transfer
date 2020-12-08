@@ -184,7 +184,7 @@ class Inferer:
         phase = (0.302 - (-0.303)) * spec[:, :, 1] + (-0.303)
 
         print('denormalized max amplitude: ', np.max(amp), ' min: ', np.min(phase))
-        print('denormalized max phase: ', np.max(amp), ' min: ', np.min(phase))
+        print('denormalized max phase: ', np.max(phase), ' min: ', np.min(phase))
 
         # print('denormalized: ', spec)
         amp = librosa.feature.inverse.db_to_power(amp)
