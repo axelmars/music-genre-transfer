@@ -213,7 +213,9 @@ if __name__ == '__main__':
     # np.save('spectrogram_ampl_phase.npy', p_a_spetro)
     # np.save('spectrogram_ampl.npy', amplitude_spectro)
     # binomial_mask()
-    np.imwrite()
+    samples, sample_rate = librosa.load('0019410-8.wav', sr=22050)
+    print(max(samples))
+
     # out_spectro = librosa.feature.inverse.mel_to_stft(mel_phase_spectro)
     # print(out_spectro.dtype, out_spectro.shape)
     # print(np.allclose(out_spectro, phase_spectro))
