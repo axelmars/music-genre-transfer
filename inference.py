@@ -35,10 +35,10 @@ class Inferer:
         # self.__converter.pose_encoder.compile()
 
     def infer(self, identity=True):
-        with open(os.path.join(self.__base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
+        with open(os.path.join(self.__base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as f2:
             genre_ids = pickle.load(f2)
 
-        with open(os.path.join(self.__base_dir, f'bin/spec_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as fd:
+        with open(os.path.join(self.__base_dir, f'bin/spec_paths-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as fd:
             spec_paths = pickle.load(fd)
 
         genre_ids = np.array(genre_ids)
