@@ -188,15 +188,13 @@ class Inferer:
         # print('denormalized: ', spec)
         amp = librosa.feature.inverse.db_to_power(amp)
         amp = librosa.feature.inverse.mel_to_stft(amp)
-        # audio = librosa.feature.inverse.mel_to_audio(amp)
+        audio = librosa.feature.inverse.mel_to_audio(amp)
         # audio_orig = librosa.feature.inverse.mel_to_audio(amp_orig)
-
-        phase = librosa.feature.inverse.mel_to_stft(phase, power=1)
-
-        S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
+        # phase = librosa.feature.inverse.mel_to_stft(phase, power=1)
+        # S = amp * np.cos(phase) + amp * np.sin(phase) * 1j
 
         print('performing iSTFT...')
-        audio = librosa.istft(S)
+        # audio = librosa.istft(S)
         print('iSTFT done.')
 
         if genre_transform:
