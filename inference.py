@@ -17,7 +17,8 @@ CLASS_2_ID = 12
 CLASS_1_SUB = 1
 CLASS_2_SUB = 8
 paddings = [[0, 0], [0, 0], [1, 0]]
-
+IDENTITY_TRANSFORM_DIR = f'identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}-ampl'
+GENRE_TRANSFORM_DIR = f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}-ampl'
 
 class Inferer:
     def __init__(self, args):
@@ -82,7 +83,7 @@ class Inferer:
                     dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
                     dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
                     try:
-                        Path(self.__base_dir + f'/samples/genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}').mkdir(parents=True)
+                        Path(self.__base_dir + f'/samples/' + GENRE_TRANSFORM_DIR).mkdir(parents=True)
                     except FileExistsError:
                         pass
                     if not self.__overlap:
@@ -97,13 +98,14 @@ class Inferer:
                             for k in range(13)
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
-                    imwrite(os.path.join(self.__base_dir, 'samples', f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) +
+                    imwrite(os.path.join(self.__base_dir, 'samples', GENRE_TRANSFORM_DIR, 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(
+                        destination_genre) +
                                          '.tif'), full_spec)
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
                 try:
-                    Path(self.__base_dir + f'/samples/identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}').mkdir(parents=True)
+                    Path(self.__base_dir + f'/samples/' + IDENTITY_TRANSFORM_DIR).mkdir(parents=True)
                 except FileExistsError:
                     pass
                 if not self.__overlap:
@@ -120,7 +122,7 @@ class Inferer:
                     print('length converted_imgs: ', len(converted_imgs))
                     full_spec = self._concatenate_overlap(converted_imgs)
 
-                imwrite(os.path.join(self.__base_dir, 'samples', f'identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', 'out-' + img_name[:-5] + '.tif'), full_spec)
+                imwrite(os.path.join(self.__base_dir, 'samples', IDENTITY_TRANSFORM_DIR, 'out-' + img_name[:-5] + '.tif'), full_spec)
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
@@ -198,9 +200,9 @@ class Inferer:
         print('iSTFT done.')
 
         if genre_transform:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', GENRE_TRANSFORM_DIR, str(i) + '-' + str(j) + '.wav'), SAMPLE_RATE, audio)
         else:
-            wavfile.write(os.path.join(self.__base_dir, 'samples', f'identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}', str(i) + '.wav'), SAMPLE_RATE, audio)
+            wavfile.write(os.path.join(self.__base_dir, 'samples', IDENTITY_TRANSFORM_DIR, str(i) + '.wav'), SAMPLE_RATE, audio)
 
 
 def binomial_mask(a=1, x=1, im_shape=(128, 128, 3)):
