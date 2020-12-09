@@ -60,6 +60,8 @@ class Inferer:
         sample_paths_0 = sample_paths_0[np.random.choice(sample_paths_0.shape[0], size=self.__num_samples, replace=False)]
         print('sample_paths_0 shape: ', sample_paths_0.shape)
         sample_paths_1 = sample_paths_1[np.random.choice(sample_paths_1.shape[0], size=self.__num_samples, replace=False)]
+        print(sample_paths_0)
+        print(sample_paths_1)
         if identity:
             self._transform(sample_paths_0, CLASS_1_SUB)
             self._transform(sample_paths_1, CLASS_2_SUB)
@@ -98,9 +100,7 @@ class Inferer:
                             for k in range(13)
                         ]
                         full_spec = self._concatenate_overlap(converted_imgs)
-                    imwrite(os.path.join(self.__base_dir, 'samples', GENRE_TRANSFORM_DIR, 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(
-                        destination_genre) +
-                                         '.tif'), full_spec)
+                    imwrite(os.path.join(self.__base_dir, 'samples', GENRE_TRANSFORM_DIR, 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.tif'), full_spec)
                     self.convert_spec_to_audio(full_spec, img_name[:-5], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
