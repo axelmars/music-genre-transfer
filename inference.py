@@ -187,7 +187,7 @@ class Inferer:
 
         # print('denormalized: ', spec)
         amp = librosa.feature.inverse.db_to_power(amp)
-        amp = librosa.feature.inverse.mel_to_stft(amp)
+        # amp = librosa.feature.inverse.mel_to_stft(amp)
         audio = librosa.feature.inverse.mel_to_audio(amp)
         # audio_orig = librosa.feature.inverse.mel_to_audio(amp_orig)
         # phase = librosa.feature.inverse.mel_to_stft(phase, power=1)
