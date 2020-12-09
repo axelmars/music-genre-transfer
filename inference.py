@@ -70,6 +70,7 @@ class Inferer:
 
     def _transform(self, sample_paths, original_genre, dest_sample_paths=None, destination_genre=None):
         for i, sample_path in enumerate(sample_paths):
+            print(f'current path: {sample_path}')
             if not self.__overlap:
                 imgs, img_name = self._combine_specs_to_orig(sample_path)
             else:
@@ -78,7 +79,7 @@ class Inferer:
             identity_codes = self.__converter.identity_embedding.predict(np.array([original_genre] * imgs.shape[0]))
             if destination_genre is not None:
                 for dest_sample_path in dest_sample_paths:
-                    print(f'current path: {dest_sample_path}')
+                    print(f'current dest path: {dest_sample_path}')
                     if not self.__overlap:
                         dest_imgs, dest_img_name = self._combine_specs_to_orig(dest_sample_path)
                     else:
