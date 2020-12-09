@@ -16,6 +16,7 @@ CLASS_1_ID = 17
 CLASS_2_ID = 12
 CLASS_1_SUB = 1
 CLASS_2_SUB = 8
+NUM_PARTITIONS = 13
 paddings = [[0, 0], [0, 0], [1, 0]]
 IDENTITY_TRANSFORM_DIR = f'identity_transform_{CLASS_1_SUB}-{CLASS_2_SUB}-ampl'
 GENRE_TRANSFORM_DIR = f'genre_transform_{CLASS_1_SUB}-{CLASS_2_SUB}-ampl'
@@ -78,33 +79,27 @@ class Inferer:
             pose_codes = self.__converter.pose_encoder.predict(imgs)
             identity_codes = self.__converter.identity_embedding.predict(np.array([original_genre] * imgs.shape[0]))
             if destination_genre is not None:
-                for dest_sample_path in dest_sample_paths:
-                    print(f'current dest path: {dest_sample_path}')
-                    if not self.__overlap:
-                        dest_imgs, dest_img_name = self._combine_specs_to_orig(dest_sample_path)
-                    else:
-                        dest_imgs, dest_img_name = self._combine_overlapping_specs(dest_sample_path)
-                    dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * dest_imgs.shape[0]))
-                    dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
-                    try:
-                        Path(self.__base_dir + f'/samples/' + GENRE_TRANSFORM_DIR).mkdir(parents=True)
-                    except FileExistsError:
-                        pass
-                    if not self.__overlap:
-                        converted_imgs = [
-                            np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
-                            for k in range(10)
-                        ]
-                        full_spec = np.concatenate(converted_imgs, axis=1)
-                    else:
-                        converted_imgs = [
-                            np.pad(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0], pad_width=paddings, constant_values=0)
-                            for k in range(13)
-                        ]
-                        full_spec = self._concatenate_overlap(converted_imgs)
-                    imwrite(os.path.join(self.__base_dir, 'samples', GENRE_TRANSFORM_DIR, 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.tif'), full_spec)
-                    print(f'converting spec {img_name[:-6]}')
-                    self.convert_spec_to_audio(full_spec, img_name[:-6], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
+                dest_identity_codes = self.__converter.identity_embedding.predict(np.array([destination_genre] * NUM_PARTITIONS))
+                dest_identity_adain_params = self.__converter.identity_modulation.predict(dest_identity_codes)
+                try:
+                    Path(self.__base_dir + f'/samples/' + GENRE_TRANSFORM_DIR).mkdir(parents=True)
+                except FileExistsError:
+                    pass
+                if not self.__overlap:
+                    converted_imgs = [
+                        np.squeeze(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0]).T
+                        for k in range(10)
+                    ]
+                    full_spec = np.concatenate(converted_imgs, axis=1)
+                else:
+                    converted_imgs = [
+                        np.pad(self.__converter.generator.predict([pose_codes[[k]], dest_identity_adain_params[[k]]])[0], pad_width=paddings, constant_values=0)
+                        for k in range(13)
+                    ]
+                    full_spec = self._concatenate_overlap(converted_imgs)
+                imwrite(os.path.join(self.__base_dir, 'samples', GENRE_TRANSFORM_DIR, 'out-' + img_name[:-5] + '-' + str(original_genre) + '-' + str(destination_genre) + '.tif'), full_spec)
+                print(f'converting spec {img_name[:-6]}')
+                self.convert_spec_to_audio(full_spec, img_name[:-6], str(original_genre) + '-' + str(destination_genre), genre_transform=True)
             else:
                 identity_adain_params = self.__converter.identity_modulation.predict(identity_codes)
                 try:
