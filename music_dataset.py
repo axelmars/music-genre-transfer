@@ -40,7 +40,7 @@ MP3_PATH = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_m
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 FEATURES_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/features.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
-OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-pl'
+OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-t'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
 
 
@@ -159,7 +159,7 @@ def list_tracks():
     return track_paths, genre_ids, track_ids
 
 
-def create_spectrograms(overlap=False, include_phase=True, width=128):
+def create_spectrograms(overlap=False, include_phase=True, width=128, genres_suffix='c'):
     """
     loads tracks according to given ids and saves their spectrograms.
     :param tracks_ids:
@@ -168,7 +168,7 @@ def create_spectrograms(overlap=False, include_phase=True, width=128):
     with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
         wav_file_paths = pickle.load(f1)
 
-    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-{genres_suffix}.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
 
     # print('num pop: ', np.count_nonzero(np.array(genre_ids) == CLASS_2_ID), ' num classical: ', np.count_nonzero(np.array(genre_ids) == CLASS_1_ID))
@@ -183,8 +183,8 @@ def create_spectrograms(overlap=False, include_phase=True, width=128):
         # mel_specto = librosa.stft(y=audio_data)
         if include_phase:
             spectro = librosa.stft(y=audio_data)
-            phase_spectro = librosa.feature.melspectrogram(S=np.angle(spectro), sr=sample_rate)
-            amplitude_spectro = librosa.feature.melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate)
+            phase_spectro = melspectrogram(S=np.angle(spectro), sr=sample_rate, is_angle=True)
+            amplitude_spectro = melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate, is_angle=False)
             amplitude_spectro = librosa.power_to_db(amplitude_spectro)
             S_dB = np.zeros(shape=(128, phase_spectro.shape[1], 2), dtype=np.float32)
             S_dB[:, :, 0] = amplitude_spectro
@@ -352,9 +352,14 @@ def convert_mp3_to_wav():
 
     with open(f'wav_file_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f1:
         pickle.dump(wav_file_paths, f1)
-
     # with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'wb') as f2:
     #     pickle.dump(genre_ids, f2)
+
+
+def reset_genres(suffix='c'):
+    track_paths, genre_ids, track_ids = list_tracks()
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-{suffix}.pkl', 'wb') as f2:
+        pickle.dump(genre_ids, f2)
 
 
 def clustering_processing(batch, pca, kmeans):
@@ -601,29 +606,56 @@ def convert_paths_to_str():
 
 
 def count_genres():
-    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+    with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
 
     for i in np.unique(genre_ids):
         print(f'{i}: {np.count_nonzero(genre_ids == i)}')
 
 
+def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
+    low_freq_mel = 0
+    high_freq_mel = (2595 * np.log10(1 + (sr / 2) / 700))  # Convert Hz to Mel
+    mel_points = np.linspace(low_freq_mel, high_freq_mel, n_filters + 2)  # Equally spaced in Mel scale
+    hz_points = (700 * (10 ** (mel_points / 2595) - 1))  # Convert Mel to Hz
+    bin = np.floor((n_fft + 1) * hz_points / sr)
+
+    fbank = np.zeros((n_filters, int(np.floor(n_fft / 2 + 1))))
+    for m in range(1, n_filters + 1):
+        f_m_minus = int(bin[m - 1])  # left
+        f_m = int(bin[m])  # center
+        f_m_plus = int(bin[m + 1])  # right
+
+        for k in range(f_m_minus, f_m):
+            fbank[m - 1, k] = (k - bin[m - 1]) / (bin[m] - bin[m - 1])
+        for k in range(f_m, f_m_plus):
+            fbank[m - 1, k] = (bin[m + 1] - k) / (bin[m + 1] - bin[m])
+    if is_angle:
+        filter_banks_x = np.dot(fbank, np.cos(S))  # filter on x axis
+        filter_banks_y = np.dot(fbank, np.sin(S))  # filter on y axis
+        filter_banks = np.arctan2(filter_banks_x, filter_banks_y)  # change back to angle in radians
+    else:
+        filter_banks = np.dot(fbank, S)
+    return filter_banks
+    # filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)  # Numerical Stability
+
+    # filter_banks = 20 * np.log10(filter_banks)  # dB
+
+
 if __name__ == '__main__':
-    # list_tracks()
-    # for iden in genre_ids:
-    #     print(iden)
-    create_clustered_subgenres(vgg_features=True)
-    create_genres_only()
+    # create_clustered_subgenres(vgg_features=True)
+    # create_genres_only()
+    # clustering_analysis()
     # # finetune_clustering()
-    clustering_analysis()
     # get_pc_eigenvalues()
     # cluster()
     # visualise_reduction()
     # create_genres_only()
     # convert_paths_to_str()
     # set_non_clustered_genres()
-    # create_spectrograms(overlap=True, include_phase=True, width=256)
-    # count_genres()
+    reset_genres('c')
+    create_spectrograms(overlap=True, include_phase=True, width=128, genres_suffix='c')
+    count_genres()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)

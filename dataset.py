@@ -399,7 +399,7 @@ class SimpleFMA(DataSet):
 
 		img_paths = self.__list_imgs()
 
-		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
+		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as f2:
 			genre_ids = pickle.load(f2)
 
 		assert len(img_paths) == len(genre_ids)
@@ -407,7 +407,7 @@ class SimpleFMA(DataSet):
 
 		# unique_identity_ids = list(set(identity_ids))
 
-		imgs = np.empty(shape=(len(img_paths), 128, 256, 2), dtype=np.float32)
+		imgs = np.empty(shape=(len(img_paths), 128, 128, 2), dtype=np.float32)
 		identities = np.empty(shape=(len(img_paths), ), dtype=np.uint32)
 		poses = np.zeros(shape=(len(img_paths), ), dtype=np.uint32)
 
