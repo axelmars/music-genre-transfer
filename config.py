@@ -1,3 +1,4 @@
+import numpy as np
 default_config = dict(
 
 	# pose_std=1,
@@ -11,9 +12,9 @@ default_config = dict(
 	adain_dim=256,
 
 	min_level_db=-100.0,
-	max_level_db=41.0,
-	min_phase=-0.303,
-	max_phase=0.302,
+	max_level_db=55.1,
+	min_phase=-np.pi,
+	max_phase=np.pi,
 
 	perceptual_loss=dict(
 		layers=[2, 5, 8, 13, 18],
