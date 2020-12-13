@@ -614,22 +614,23 @@ def count_genres():
 
 
 def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
-    low_freq_mel = 0
-    high_freq_mel = (2595 * np.log10(1 + (sr / 2) / 700))  # Convert Hz to Mel
-    mel_points = np.linspace(low_freq_mel, high_freq_mel, n_filters + 2)  # Equally spaced in Mel scale
-    hz_points = (700 * (10 ** (mel_points / 2595) - 1))  # Convert Mel to Hz
-    bin = np.floor((n_fft + 1) * hz_points / sr)
-
-    fbank = np.zeros((n_filters, int(np.floor(n_fft / 2 + 1))))
-    for m in range(1, n_filters + 1):
-        f_m_minus = int(bin[m - 1])  # left
-        f_m = int(bin[m])  # center
-        f_m_plus = int(bin[m + 1])  # right
-
-        for k in range(f_m_minus, f_m):
-            fbank[m - 1, k] = (k - bin[m - 1]) / (bin[m] - bin[m - 1])
-        for k in range(f_m, f_m_plus):
-            fbank[m - 1, k] = (bin[m + 1] - k) / (bin[m + 1] - bin[m])
+    # low_freq_mel = 0
+    # high_freq_mel = (2595 * np.log10(1 + (sr / 2) / 700))  # Convert Hz to Mel
+    # mel_points = np.linspace(low_freq_mel, high_freq_mel, n_filters + 2)  # Equally spaced in Mel scale
+    # hz_points = (700 * (10 ** (mel_points / 2595) - 1))  # Convert Mel to Hz
+    # bin = np.floor((n_fft + 1) * hz_points / sr)
+    #
+    # fbank = np.zeros((n_filters, int(np.floor(n_fft / 2 + 1))))
+    # for m in range(1, n_filters + 1):
+    #     f_m_minus = int(bin[m - 1])  # left
+    #     f_m = int(bin[m])  # center
+    #     f_m_plus = int(bin[m + 1])  # right
+    #
+    #     for k in range(f_m_minus, f_m):
+    #         fbank[m - 1, k] = (k - bin[m - 1]) / (bin[m] - bin[m - 1])
+    #     for k in range(f_m, f_m_plus):
+    #         fbank[m - 1, k] = (bin[m + 1] - k) / (bin[m + 1] - bin[m])
+    fbank = librosa.filters.mel(sr, n_fft, n_mels=n_filters)
     if is_angle:
         filter_banks_x = np.dot(fbank, np.cos(S))  # filter on x axis
         filter_banks_y = np.dot(fbank, np.sin(S))  # filter on y axis
@@ -653,7 +654,7 @@ if __name__ == '__main__':
     # create_genres_only()
     # convert_paths_to_str()
     # set_non_clustered_genres()
-    reset_genres('c')
+    reset_genres('s')
     create_spectrograms(overlap=True, include_phase=True, width=128, genres_suffix='c')
     count_genres()
     # set_non_clustered_genres()

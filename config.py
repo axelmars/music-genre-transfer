@@ -12,7 +12,7 @@ default_config = dict(
 	adain_dim=256,
 
 	min_level_db=-100.0,
-	max_level_db=55.1,
+	max_level_db=41.0,
 	min_phase=-np.pi,
 	max_phase=np.pi,
 
