@@ -299,17 +299,14 @@ class Converter:
 
     @classmethod
     def __cyclic_mse(cls, y_true, y_pred):
-        rad_true = y_true * 2 * np.pi
-        rad_pred = y_pred * 2 * np.pi
-        dist_sin = K.square(K.sin(rad_pred) - K.sin(rad_true))
-        dist_cos = K.square(K.cos(rad_pred) - K.cos(rad_true))
+        dist_sin = K.square(K.sin(y_pred) - K.sin(y_true))
+        dist_cos = K.square(K.cos(y_pred) - K.cos(y_true))
         # return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
         return K.mean(dist_sin + dist_cos)
 
     @classmethod
     def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
-        return tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0 * 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred,
-                                                                                                                                                                                   vgg, config)
+        return 20 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred, vgg, config)
 
     def __l1_and_l2_loss(self, y_true, y_pred):
         alpha = 0.5
