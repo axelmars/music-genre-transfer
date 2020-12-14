@@ -426,7 +426,7 @@ class SimpleFMA(DataSet):
 
 		# img_paths = self.__list_imgs()
 
-		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl'), 'rb') as f2:
+		with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as f2:
 			genre_ids = pickle.load(f2)
 
 		# img_paths, identity_ids = self.__list_imgs()
