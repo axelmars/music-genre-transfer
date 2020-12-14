@@ -290,7 +290,7 @@ class Converter:
             amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg, config)
             phase_loss = cls.__cyclic_mse(phase_true, phase_pred)
 
-            return 0.5 * amp_loss + 9 * 0.5 * phase_loss
+            return 0.5 * amp_loss + 0 * 9 * 0.5 * phase_loss
         return custom_loss
 
     @classmethod
