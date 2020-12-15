@@ -301,10 +301,10 @@ class Converter:
     def __cyclic_mse(cls, y_true, y_pred):
         rad_pred = y_pred * 2 * np.pi - np.pi
         rad_true = y_true * 2 * np.pi - np.pi
-        dist_sin = K.square(K.sin(y_pred) - K.sin(y_true))
-        dist_cos = K.square(K.cos(y_pred) - K.cos(y_true))
+        dist_sin = K.sin(rad_true - rad_pred)
+        dist_cos = K.cos(rad_true - rad_pred)
         # return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
-        return K.mean(dist_sin + dist_cos)
+        return K.mean(K.abs(tf.atan2(dist_sin, dist_cos)))
 
     @classmethod
     def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
