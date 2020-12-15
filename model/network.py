@@ -299,6 +299,8 @@ class Converter:
 
     @classmethod
     def __cyclic_mse(cls, y_true, y_pred):
+        rad_pred = y_pred * 2 * np.pi - np.pi
+        rad_true = y_true * 2 * np.pi - np.pi
         dist_sin = K.square(K.sin(y_pred) - K.sin(y_true))
         dist_cos = K.square(K.cos(y_pred) - K.cos(y_true))
         # return K.mean(K.square(K.minimum(K.square(y_true - y_pred), K.minimum(K.square(y_pred - y_true + 1), K.square(y_pred - y_true - 1)))), axis=-1)
