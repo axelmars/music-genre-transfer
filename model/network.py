@@ -573,14 +573,16 @@ class CosineLearningRateScheduler(Callback):
         self.min_lr = min_lr
         self.total_epochs = total_epochs
         self.starting_epoch = starting_epoch
-        if starting_lr == -1:
+        self.is_beginning = starting_lr == -1
+        if self.is_beginning:
             self.starting_lr = self.max_lr
         else:
             self.starting_lr = starting_lr
 
     def on_train_begin(self, logs=None):
         print(f'{self.model.optimizer.lr}......{self.starting_lr}')
-        K.set_value(self.model.optimizer.lr, self.starting_lr)
+        if self.is_beginning:
+            K.set_value(self.model.optimizer.lr, self.starting_lr)
 
     def on_epoch_end(self, epoch, logs=None):
         fraction = (self.starting_epoch + epoch) / self.total_epochs
