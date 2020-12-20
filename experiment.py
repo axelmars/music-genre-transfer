@@ -12,7 +12,6 @@ import os
 from imageio import imread, imwrite
 import librosa.display
 import librosa.feature
-
 # from keras.layers import GRU, Input, Embedding, Reshape, Conv1D, Conv2D
 # from keras.models import Model
 from skimage.color import rgb2gray
@@ -24,6 +23,9 @@ TRACKS_DIR_NAME = 'fma_small'
 GENRES_COL_NAME = 'track.8'
 CLASS_1_NAME = 'orchestral'
 CLASS_2_NAME = 'pop'
+CLASS_1_ID = 17
+CLASS_2_ID = 12
+OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-t'
 
 
 def safe_parse(x):
@@ -186,6 +188,7 @@ def binomial_mask(a=1, x=1, im_shape=(128, 128, 3)):
     mask[:, int(.75 * im_shape[1]): im_shape[1], :] = np.tile(ser_array_squash, (im_shape[0], 1, 1))
     return mask
 
+
 if __name__ == '__main__':
     # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
     # # print(AudioSegment.ffmpeg)
@@ -213,10 +216,24 @@ if __name__ == '__main__':
     # np.save('spectrogram_ampl_phase.npy', p_a_spetro)
     # np.save('spectrogram_ampl.npy', amplitude_spectro)
     # binomial_mask()
-    samples, sample_rate = librosa.load('0019410-8.wav', sr=22050)
-    print(max(samples))
-
+    # samples, sample_rate = librosa.load('0019410-8.wav', sr=22050)
+    # print(max(samples))
+    spec = np.load(os.path.join(OVERLAP_SPECS_OUTPUT_DIR, '00071601.npy'))
+    S = librosa.feature.inverse.mel_to_stft()
+    spec[:, :, 0] = (spec[:, :, 0] - (-100)) / (41 - (-100.0))
+    spec[:, :, 1] = (spec[:, :, 1] - (-0.1)) / (0.1 - (-0.1))
+    spec[:, :, 2] = (spec[:, :, 2] - (-0.1)) / (0.1 - (-0.1))
+    # paddings = [[0, 0], [0, 0], [1, 0]]
+    # spec = np.pad(spec, pad_width=paddings, constant_values=0)
+    plt.imshow(spec)
+    plt.show()
+    plt.imshow(spec[:, :, 0], cmap='gray')
+    plt.show()
+    plt.imshow(spec[:, :, 1], cmap='gray')
+    plt.show()
+    plt.imshow(spec[:, :, 2], cmap='gray')
     # out_spectro = librosa.feature.inverse.mel_to_stft(mel_phase_spectro)
+    plt.show()
     # print(out_spectro.dtype, out_spectro.shape)
     # print(np.allclose(out_spectro, phase_spectro))
 

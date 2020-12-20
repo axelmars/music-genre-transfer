@@ -9,6 +9,7 @@ import librosa
 import librosa.display
 import ast
 import pickle
+# import mirdata.medley_solos_db
 from imageio import imwrite
 from pathlib import Path
 from pydub.exceptions import CouldntDecodeError
@@ -42,6 +43,7 @@ FEATURES_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/featu
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
 OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-t'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
+SOLOS_DATASET_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_solos'
 
 
 def safe_parse(x):
@@ -159,7 +161,7 @@ def list_tracks():
     return track_paths, genre_ids, track_ids
 
 
-def create_spectrograms(overlap=False, include_phase=True, width=128, genres_suffix='c'):
+def create_spectrograms(overlap=False, include_phase=True, double_phase=True, width=128, genres_suffix='c'):
     """
     loads tracks according to given ids and saves their spectrograms.
     :param tracks_ids:
@@ -183,14 +185,27 @@ def create_spectrograms(overlap=False, include_phase=True, width=128, genres_suf
         # mel_specto = librosa.stft(y=audio_data)
         if include_phase:
             spectro = librosa.stft(y=audio_data)
-            phase_spectro = melspectrogram(S=np.angle(spectro), sr=sample_rate, is_angle=True)
-            amplitude_spectro = melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate, is_angle=False)
-            amplitude_spectro = librosa.power_to_db(amplitude_spectro)
-            S_dB = np.zeros(shape=(128, phase_spectro.shape[1], 2), dtype=np.float32)
-            S_dB[:, :, 0] = amplitude_spectro
-            S_dB[:, :, 1] = phase_spectro
+            if double_phase:
+                phase = np.angle(spectro)
+                fbank = librosa.filters.mel(sample_rate, n_fft=2048, n_mels=128)
+                phase_sin_spectro = np.dot(fbank, np.sin(phase))
+                phase_cos_spectro = np.dot(fbank, np.cos(phase))
+                amplitude_spectro = np.dot(fbank, np.abs(spectro) ** 2)
+                amplitude_spectro = librosa.power_to_db(amplitude_spectro)
+                S_dB = np.zeros(shape=(128, amplitude_spectro.shape[1], 3), dtype=np.float32)
+                S_dB[:, :, 0] = amplitude_spectro
+                S_dB[:, :, 1] = phase_cos_spectro
+                S_dB[:, :, 2] = phase_sin_spectro
+            else:
+                phase_spectro = melspectrogram(S=np.angle(spectro), sr=sample_rate, is_angle=True)
+                amplitude_spectro = melspectrogram(S=np.abs(spectro) ** 2, sr=sample_rate, is_angle=False)
+                amplitude_spectro = librosa.power_to_db(amplitude_spectro)
+                S_dB = np.zeros(shape=(128, amplitude_spectro.shape[1], 2), dtype=np.float32)
+                S_dB[:, :, 0] = amplitude_spectro
+                S_dB[:, :, 1] = phase_spectro
             print('ampl max: ', np.max(S_dB[:, :, 0]), 'ampl min: ', np.min(S_dB[:, :, 0]))
-            print('phase max: ', np.max(S_dB[:, :, 1]), 'phase min: ', np.min(S_dB[:, :, 1]))
+            print('phase cos max: ', np.max(S_dB[:, :, 1]), ' min: ', np.min(S_dB[:, :, 1]))
+            print('phase sin max: ', np.max(S_dB[:, :, 2]), ' min: ', np.min(S_dB[:, :, 2]))
         else:
             mel_spectro = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
             S_dB = librosa.power_to_db(mel_spectro)
@@ -634,6 +649,7 @@ def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
     if is_angle:
         filter_banks_x = np.dot(fbank, np.cos(S))  # filter on x axis
         filter_banks_y = np.dot(fbank, np.sin(S))  # filter on y axis
+        print(f'.........{np.max(filter_banks_x), np.max(filter_banks_y)}')
         filter_banks = np.arctan2(filter_banks_x, filter_banks_y)  # change back to angle in radians
     else:
         filter_banks = np.dot(fbank, S)
@@ -641,6 +657,10 @@ def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
     # filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)  # Numerical Stability
 
     # filter_banks = 20 * np.log10(filter_banks)  # dB
+
+
+# def download_solos_dataset():
+#    mirdata.medley_solos_db.download(data_home=SOLOS_DATASET_DIR, cleanup=True, force_overwrite=False)
 
 
 if __name__ == '__main__':
@@ -654,8 +674,9 @@ if __name__ == '__main__':
     # create_genres_only()
     # convert_paths_to_str()
     # set_non_clustered_genres()
-    reset_genres('s')
-    create_spectrograms(overlap=True, include_phase=True, width=128, genres_suffix='c')
+    # download_solos_dataset()
+    # reset_genres('s')
+    create_spectrograms(overlap=True, include_phase=True, double_phase=True, width=128, genres_suffix='c')
     count_genres()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)

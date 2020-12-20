@@ -579,6 +579,7 @@ class CosineLearningRateScheduler(Callback):
             self.starting_lr = starting_lr
 
     def on_train_begin(self, logs=None):
+        print(f'{self.model.optimizer.lr}......{self.starting_lr}')
         K.set_value(self.model.optimizer.lr, self.starting_lr)
 
     def on_epoch_end(self, epoch, logs=None):
