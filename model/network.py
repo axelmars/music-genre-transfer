@@ -288,7 +288,7 @@ class Converter:
             phase_pred = K.expand_dims(y_pred[:, :, :, 1:], axis=-1)
 
             amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg, config)
-            phase_loss = cls.__cyclic_mse(phase_true, phase_pred)
+            phase_loss = cls.__l1_and_l2_loss(phase_true, phase_pred)
 
             return 0.5 * amp_loss + 0.5 * phase_loss
         return custom_loss
@@ -310,8 +310,9 @@ class Converter:
     def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
         return 23 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred, vgg, config)
 
-    def __l1_and_l2_loss(self, y_true, y_pred):
-        alpha = 0.5
+    @classmethod
+    def __l1_and_l2_loss(cls, y_true, y_pred):
+        alpha = 0.9
         return (1 - alpha) * tf.keras.losses.MeanAbsoluteError()(y_true, y_pred) + alpha * tf.keras.losses.MeanSquaredError()(y_true, y_pred)
 
     @classmethod
