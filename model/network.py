@@ -423,15 +423,15 @@ class Converter:
 
         if config.img_shape[-1] == 1:
             x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(img)
-        elif config.img_shape[-1] == 2:
+        else:
             x = K.expand_dims(img[:, :, :, 0], -1)
             x = Lambda(lambda t: tf.tile(t, multiples=(1, 1, 1, 3)))(x)
         # paddings = K.constant([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=tf.int32)
         # channel_to_add = np.zeros(shape=(self.config.img_shape[0], self.config.img_shape[1], 1), dtype=np.float32)
         # x = Lambda(lambda t: tf.pad(t, paddings=paddings, constant_values=0))(img)
         # x = K.map_fn(lambda t: tf.concat((t, [channel_to_add]), axis=-1), img)
-        else:
-            x = img
+        # else:
+        #     x = img
 
         x = VggNormalization()(x)
         features = feature_extractor(x)
