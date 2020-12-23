@@ -114,6 +114,7 @@ def split_samples(args):
 		np.savez(
 			file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
 		)
+		del train_imgs
 	del imgs
 	imgs_train = []
 	for i in range(num_batches):
