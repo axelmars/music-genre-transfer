@@ -104,8 +104,10 @@ def split_samples(args):
 
 	print('deleted ids, poses')
 	num_batches = 4
+	print(f'train_idx shape: {train_idx.shape}')
 	train_idx_int = np.arange(train_idx.shape[0])[train_idx]
 	n_in_batch = int(train_idx_int.shape[0] / num_batches)
+	print(n_in_batch)
 	for i in range(num_batches):
 		if i + 1 == num_batches:
 			indices = train_idx_int[i * n_in_batch:]
