@@ -102,7 +102,6 @@ def split_samples(args):
 	)
 	print('saved test data')
 
-	train_ids = identities[train_idx]
 	print('deleted ids, poses')
 	num_batches = 3
 	n_in_batch = int(train_idx.shape[0] / num_batches)
@@ -121,7 +120,6 @@ def split_samples(args):
 		imgs_train.append(np.load(assets.get_preprocess_file_path(str(i)))['imgs'])
 	imgs_train = np.concatenate(imgs_train, axis=0)
 	print('transferred variables')
-	print(train_ids)
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
 		imgs=imgs_train, identities=identities[train_idx], poses=poses[train_idx], n_identities=n_identities
