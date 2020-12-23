@@ -105,11 +105,12 @@ def split_samples(args):
 	print('deleted ids, poses')
 	num_batches = 3
 	n_in_batch = int(train_idx.shape[0] / num_batches)
+	train_idx_int = np.arange(train_idx.shape(0))[train_idx]
 	for i in range(num_batches):
 		if i + 1 == num_batches:
-			indices = train_idx[i * n_in_batch:]
+			indices = train_idx_int[i * n_in_batch:]
 		else:
-			indices = train_idx[i * n_in_batch: (i + 1) * n_in_batch]
+			indices = train_idx_int[i * n_in_batch: (i + 1) * n_in_batch]
 		train_imgs = imgs[indices]
 		np.savez(
 			file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
