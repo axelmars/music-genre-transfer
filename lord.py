@@ -66,7 +66,7 @@ def split_samples(args):
 
 	data = np.load(assets.get_preprocess_file_path(args.input_data_name))
 	imgs, identities, poses = data['imgs'], data['identities'], data['poses']
-	data = None
+	del data
 
 	n_identities = np.unique(identities).size
 
@@ -76,13 +76,13 @@ def split_samples(args):
 	print('spec_paths shape: ', spec_paths.shape)
 	# Assuming order is kept
 	spec_paths_ids = np.array([x[-12:-6] for x in spec_paths])
-	spec_paths = None
+	del spec_paths
 	spec_ids = np.unique(spec_paths_ids)
 	n_samples = spec_ids.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
 
 	random_ids = np.random.choice(spec_ids, size=n_test_samples, replace=False)
-	spec_ids = None
+	del spec_ids
 
 	test_idx = np.nonzero(spec_paths_ids == random_ids[:, None])[1]
 	print('test_idx shape: ', test_idx.shape)
@@ -91,7 +91,7 @@ def split_samples(args):
 	print('train_idx shape: ', np.count_nonzero(train_idx))
 
 	print(spec_paths_ids[train_idx][:26])
-	spec_paths_ids = None
+	del spec_paths_ids
 
 	np.save(os.path.join(args.base_dir, 'bin', 'test_idx.npy'), test_idx)
 	np.save(os.path.join(args.base_dir, 'bin', 'train_idx.npy'), train_idx)
@@ -104,13 +104,14 @@ def split_samples(args):
 	)
 	print('saved test data')
 
-	test_idx = None
+	del test_idx
 	train_imgs = imgs[train_idx]
 	train_ids = identities[train_idx]
 	train_poses = poses[train_idx]
-	imgs = None
-	identities = None
-	poses = None
+	print('transferred variables')
+	del imgs
+	del identities
+	del poses
 	print(train_ids)
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
