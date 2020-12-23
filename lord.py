@@ -1,5 +1,6 @@
 import argparse
 import os
+import gc
 
 import pickle
 import numpy as np
@@ -110,6 +111,7 @@ def split_samples(args):
 	train_poses = poses[train_idx]
 	del poses
 	print('deleted ids, poses')
+	gc.collect()
 	train_imgs = imgs[train_idx]
 	del imgs
 	print(train_imgs)
