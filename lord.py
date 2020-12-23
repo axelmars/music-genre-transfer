@@ -112,6 +112,7 @@ def split_samples(args):
 		else:
 			indices = train_idx_int[i * n_in_batch: (i + 1) * n_in_batch]
 		train_imgs = imgs[indices]
+		print(train_imgs.shape[0])
 		np.savez(
 			file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
 		)
