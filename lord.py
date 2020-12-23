@@ -120,7 +120,7 @@ def split_samples(args):
 		)
 		del train_imgs
 	del imgs
-	imgs_train = np.zeros((n_samples - n_test_samples, 128, 128, 3))
+	imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 3))
 	for i in range(num_batches):
 		if i + 1 == num_batches:
 			imgs_train[i * n_in_batch:] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
