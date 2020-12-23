@@ -68,6 +68,7 @@ def split_samples(args):
 	data = np.load(assets.get_preprocess_file_path(args.input_data_name))
 	imgs, identities, poses = data['imgs'], data['identities'], data['poses']
 	del data
+	gc.collect()
 
 	n_identities = np.unique(identities).size
 
