@@ -105,13 +105,15 @@ def split_samples(args):
 	print('saved test data')
 
 	del test_idx
-	train_imgs = imgs[train_idx]
-	del imgs
-	print(train_imgs)
 	train_ids = identities[train_idx]
 	del identities
 	train_poses = poses[train_idx]
 	del poses
+	print('deleted ids, poses')
+	train_imgs = imgs[train_idx]
+	del imgs
+	print(train_imgs)
+
 	print('transferred variables')
 	print(train_ids)
 	np.savez(
