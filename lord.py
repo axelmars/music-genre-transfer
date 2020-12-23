@@ -107,6 +107,7 @@ def split_samples(args):
 	del test_idx
 	train_imgs = imgs[train_idx]
 	del imgs
+	print(train_imgs)
 	train_ids = identities[train_idx]
 	del identities
 	train_poses = poses[train_idx]
