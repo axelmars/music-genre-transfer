@@ -96,15 +96,19 @@ def split_samples(args):
 	np.save(os.path.join(args.base_dir, 'bin', 'test_idx.npy'), test_idx)
 	np.save(os.path.join(args.base_dir, 'bin', 'train_idx.npy'), train_idx)
 
+	print('Saved indices')
+
 	np.savez(
 		file=assets.get_preprocess_file_path(args.test_data_name),
 		imgs=imgs[test_idx], identities=identities[test_idx], poses=poses[test_idx], n_identities=n_identities
 	)
+	print('saved test data')
 
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
 		imgs=imgs[train_idx], identities=identities[train_idx], poses=poses[train_idx], n_identities=n_identities
 	)
+	print('saved train data')
 
 
 def train(args):
