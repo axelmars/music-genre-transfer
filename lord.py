@@ -120,7 +120,7 @@ def split_samples(args):
 		)
 		del train_imgs
 	del imgs
-	imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 3))
+	imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 3), dtype=np.float32)
 	print('created zeros')
 	for i in range(num_batches):
 		if i + 1 == num_batches:
