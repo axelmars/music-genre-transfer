@@ -67,8 +67,6 @@ def split_samples(args):
 
 	data = np.load(assets.get_preprocess_file_path(args.input_data_name))
 	imgs, identities, poses = data['imgs'], data['identities'], data['poses']
-	del data
-	gc.collect()
 
 	n_identities = np.unique(identities).size
 
@@ -78,13 +76,11 @@ def split_samples(args):
 	print('spec_paths shape: ', spec_paths.shape)
 	# Assuming order is kept
 	spec_paths_ids = np.array([x[-12:-6] for x in spec_paths])
-	del spec_paths
 	spec_ids = np.unique(spec_paths_ids)
 	n_samples = spec_ids.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
 
 	random_ids = np.random.choice(spec_ids, size=n_test_samples, replace=False)
-	del spec_ids
 
 	test_idx = np.nonzero(spec_paths_ids == random_ids[:, None])[1]
 	print('test_idx shape: ', test_idx.shape)
@@ -106,22 +102,29 @@ def split_samples(args):
 	)
 	print('saved test data')
 
-	del test_idx
 	train_ids = identities[train_idx]
-	del identities
-	train_poses = poses[train_idx]
-	del poses
 	print('deleted ids, poses')
-	gc.collect()
-	train_imgs = imgs[train_idx]
+	num_batches = 3
+	n_in_batch = int(train_idx.shape[0] / num_batches)
+	for i in range(num_batches):
+		if i + 1 == num_batches:
+			indices = train_idx[i * n_in_batch:]
+		else:
+			indices = train_idx[i * n_in_batch: (i + 1) * n_in_batch]
+		train_imgs = imgs[indices]
+		np.savez(
+			file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
+		)
 	del imgs
-	print(train_imgs)
-
+	imgs_train = []
+	for i in range(num_batches):
+		imgs_train.append(np.load(assets.get_preprocess_file_path(str(i)))['imgs'])
+	imgs_train = np.concatenate(imgs_train, axis=0)
 	print('transferred variables')
 	print(train_ids)
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
-		imgs=train_imgs, identities=train_ids, poses=train_poses, n_identities=n_identities
+		imgs=imgs_train, identities=identities[train_idx], poses=poses[train_idx], n_identities=n_identities
 	)
 	print('saved train data')
 
