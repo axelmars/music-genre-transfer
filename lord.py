@@ -164,11 +164,17 @@ def train(args):
 	# imgs = imgs / 255.0
 
 	# shuffle the images
-	idx = np.arange(imgs.shape[0])
-	np.random.shuffle(idx)
-	imgs = imgs[idx]
-	identities = identities[idx]
-	poses = identities[idx]
+	# idx = np.arange(imgs.shape[0])
+	# np.random.shuffle(idx)
+	rng = np.random.get_state()
+	np.random.shuffle(imgs)
+	np.random.set_state(rng)
+	np.random.shuffle(identities)
+	np.random.set_state(rng)
+	np.random.shuffle(poses)
+	# imgs = imgs[idx]
+	# identities = identities[idx]
+	# poses = poses[idx]
 
 	if args.resume != -1:
 		converter = Converter.load(model_dir, include_encoders=False)
