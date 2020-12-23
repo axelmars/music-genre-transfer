@@ -106,12 +106,12 @@ def split_samples(args):
 
 	del test_idx
 	train_imgs = imgs[train_idx]
-	train_ids = identities[train_idx]
-	train_poses = poses[train_idx]
-	print('transferred variables')
 	del imgs
+	train_ids = identities[train_idx]
 	del identities
+	train_poses = poses[train_idx]
 	del poses
+	print('transferred variables')
 	print(train_ids)
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
