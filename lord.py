@@ -102,11 +102,18 @@ def split_samples(args):
 		file=assets.get_preprocess_file_path(args.test_data_name),
 		imgs=imgs[test_idx], identities=identities[test_idx], poses=poses[test_idx], n_identities=n_identities
 	)
+	test_idx = None
+	train_imgs = imgs[train_idx]
+	train_ids = identities[train_idx]
+	train_poses = poses[train_idx]
+	imgs = None
+	identities = None
+	poses = None
+	print(train_ids)
 	print('saved test data')
-
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
-		imgs=imgs[train_idx], identities=identities[train_idx], poses=poses[train_idx], n_identities=n_identities
+		imgs=train_imgs, identities=train_ids, poses=train_poses, n_identities=n_identities
 	)
 	print('saved train data')
 
