@@ -120,10 +120,10 @@ def split_samples(args):
 	imgs_train = np.zeros((n_samples - n_test_samples, 128, 128, 3))
 	for i in range(num_batches):
 		if i + 1 == num_batches:
-			indices = train_idx_int[i * n_in_batch:]
+			imgs_train[i * n_in_batch:] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
 		else:
-			indices = train_idx_int[i * n_in_batch: (i + 1) * n_in_batch]
-		imgs_train[indices] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
+			imgs_train[i * n_in_batch: (i + 1) * n_in_batch] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
+
 	print('transferred variables')
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
