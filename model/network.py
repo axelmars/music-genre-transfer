@@ -294,7 +294,6 @@ class Converter:
         def custom_loss(y_true, y_pred):
             amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(y_true, y_pred, vgg, config)
             return amp_loss
-
         return custom_loss
 
     @classmethod
@@ -312,7 +311,7 @@ class Converter:
 
     @classmethod
     def __l1_l2_and_perceptual_loss_multiscale(cls, y_true, y_pred, vgg, config):
-        return 0 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred, vgg, config)
+        return 30 * tf.keras.losses.MeanSquaredError()(y_true, y_pred) + 0.0125 * cls.__perceptual_loss_multiscale(y_true, y_pred, vgg, config)
 
     @classmethod
     def __l1_and_l2_loss(cls, y_true, y_pred):
