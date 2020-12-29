@@ -44,23 +44,24 @@ class EvaluationCallback(TensorBoard):
 		# np.pad(t, pad_width=paddings, constant_values=0)
 		# blank = np.zeros_like(imgs[0][:, :, 0][:, :, None])
 		blank = np.zeros_like(imgs[0])
-		blank = np.pad(blank, pad_width=paddings, constant_values=0)
+		# blank = np.pad(blank, pad_width=paddings, constant_values=0)
 
 		# output = [np.concatenate([blank] + [img[:, :, 0][:, :, None] for img in imgs], axis=1)]
-		output = [np.concatenate([blank] + [np.pad(img, pad_width=paddings, constant_values=0) for img in imgs], axis=1)]
+		# output = [np.concatenate([blank] + [np.pad(img, pad_width=paddings, constant_values=0) for img in imgs], axis=1)]
+		output = [np.concatenate([blank] + [img for img in imgs], axis=1)]
 		# if not os.path.isdir('samples'):
 		# 	os.mkdir('samples')
 		for i in range(self.__n_samples_per_evaluation):
 			# imwrite(os.path.join('samples', 'orig_img' + str(i) + '.png'), (np.squeeze(imgs[i]).T * 255).astype(np.uint8))
 			# convert_spec_to_audio(imgs[i], i)
-			# converted_imgs = [imgs[i][:, :, 0][:, :, None]] + [
-			# 	self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0][:, :, 0][:, :, None]
-			# 	for j in range(self.__n_samples_per_evaluation)
-			# ]
-			converted_imgs = [np.pad(imgs[i], pad_width=paddings, constant_values=0)] + [
-				np.pad(self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0], pad_width=paddings, constant_values=0)
+			converted_imgs = [imgs[i][:, :, 0][:, :, None]] + [
+				self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0][:, :, 0][:, :, None]
 				for j in range(self.__n_samples_per_evaluation)
 			]
+			# converted_imgs = [np.pad(imgs[i], pad_width=paddings, constant_values=0)] + [
+			# 	np.pad(self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0], pad_width=paddings, constant_values=0)
+			# 	for j in range(self.__n_samples_per_evaluation)
+			# ]
 			# for j in range(self.__n_samples_per_evaluation):
 			# 	img = self.__generator.predict([pose_codes[[j]], identity_adain_params[[i]]])[0]
 			# 	img = save_image(img, i, j)
