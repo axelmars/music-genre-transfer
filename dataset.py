@@ -426,7 +426,7 @@ class SimpleFMA(DataSet):
 
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
 			# img = img.T[:, :, None]
-			imgs[i] = img[:, :, 0]
+			imgs[i] = img[:, :, 0][:, :, None]
 			identities[i] = genre_ids[i]
 
 		return imgs, identities, poses
