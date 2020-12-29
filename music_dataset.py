@@ -43,7 +43,7 @@ MP3_PATH_SOLOS = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_solo
 TRACKS_METADATA_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/tracks.csv'
 FEATURES_FMA = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/fma_metadata01/features.csv'
 SPECS_OUTPUT_DIR = 'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_img_c'
-OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-t'
+OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-e'
 MEDLEY_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_solos\\solos_specs'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
 SOLOS_DATASET_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_solos\\solos'
@@ -52,6 +52,8 @@ SORTS_LIST = 'sorts-solos.pkl'
 GENRES_LIST = 'genres-solos.pkl'
 TRACK_IDS_LIST = 'track_ids-solos.pkl'
 SPEC_PATHS_LIST_SOLOS = 'spec_paths-solos.pkl'
+TRAIN_GENRES = 'train-genres.pkl'
+TRAIN_TRACK_IDS = 'train-track-ids.pkl'
 
 
 def safe_parse(x):
@@ -279,7 +281,33 @@ def create_spectrograms_medley(include_phase=True, double_phase=True, width=128)
         pickle.dump(spec_paths, f1)
 
 
-def create_spectrograms(overlap=False, include_phase=True, double_phase=True, width=128, genres_suffix='c', dataset='medley'):
+def create_genres_only_solos():
+    with open(SORTS_LIST, 'rb') as f1:
+        sorts_list = pickle.load(f1)
+
+    with open(GENRES_LIST, 'rb') as f1:
+        genres_list = pickle.load(f1)
+
+    with open(TRACK_IDS_LIST, 'rb') as f1:
+        track_ids_list = pickle.load(f1)
+
+    assert len(sorts_list) == len(genres_list) == len(track_ids_list)
+
+    train_genres = []
+    train_ids = []
+    for sort, genre, track_id in zip(sorts_list, genres_list, track_ids_list):
+        if sort == 'test':
+            train_genres.append(genre)
+            train_ids.append(track_id)
+
+    with open(TRAIN_GENRES, 'wb') as f2:
+        pickle.dump(train_genres, f2)
+
+    with open(TRAIN_TRACK_IDS, 'wb') as f2:
+        pickle.dump(train_ids, f2)
+
+
+def create_spectrograms(overlap=False, include_phase=True, double_phase=True, width=128, genres_suffix='c'):
     """
     loads tracks according to given ids and saves their spectrograms.
     :param tracks_ids:
@@ -294,7 +322,7 @@ def create_spectrograms(overlap=False, include_phase=True, double_phase=True, wi
     # print('num pop: ', np.count_nonzero(np.array(genre_ids) == CLASS_2_ID), ' num classical: ', np.count_nonzero(np.array(genre_ids) == CLASS_1_ID))
     spec_paths = []
     split_genres_ids = []
-    for track_path, genre_id, sort in zip(wav_file_paths, genre_ids, sorts):
+    for track_path, genre_id in zip(wav_file_paths, genre_ids):
         # sample_rate, audio_data = wavfile.read(track_path)
         audio_data, sample_rate = librosa.load(track_path, sr=22050)
         # audio_data = audio_data.astype(float)
@@ -306,8 +334,9 @@ def create_spectrograms(overlap=False, include_phase=True, double_phase=True, wi
             if double_phase:
                 phase = np.angle(spectro)
                 fbank = librosa.filters.mel(sample_rate, n_fft=2048, n_mels=128)
-                phase_sin_spectro = np.dot(fbank, np.sin(phase))
-                phase_cos_spectro = np.dot(fbank, np.cos(phase))
+                phase_sin_spectro = np.dot(fbank, (np.sin(phase) + 1) * 100)
+                phase_cos_spectro = np.dot(fbank, (np.cos(phase) + 1) * 100)
+                print(np.abs(spectro).max(), np.abs(spectro).min())
                 amplitude_spectro = np.dot(fbank, np.abs(spectro) ** 2)
                 amplitude_spectro = librosa.power_to_db(amplitude_spectro)
                 S_dB = np.zeros(shape=(128, amplitude_spectro.shape[1], 3), dtype=np.float32)
@@ -801,9 +830,10 @@ if __name__ == '__main__':
     # set_non_clustered_genres()
     # download_solos_dataset()
     # reset_genres('s')
-    list_tracks_medley()
-    create_spectrograms_medley(include_phase=True, double_phase=True, width=128)
-    count_genres()
+    # list_tracks_medley()
+    create_genres_only_solos()
+    # create_spectrograms(include_phase=True, double_phase=True, width=128)
+    # count_genres()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)
