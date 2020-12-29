@@ -280,17 +280,21 @@ class Converter:
         # converter = self
         vgg = cls.__build_vgg(config)
 
+        # def custom_loss(y_true, y_pred):
+        #     amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
+        #     phase_true = K.expand_dims(y_true[:, :, :, 1:], axis=-1)
+        #
+        #     amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
+        #     phase_pred = K.expand_dims(y_pred[:, :, :, 1:], axis=-1)
+        #
+        #     amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg, config)
+        #     phase_loss = cls.__l1_and_l2_loss(phase_true, phase_pred)
+        #
+        #     return 0.25 * amp_loss + 100 * 0.5 * phase_loss
         def custom_loss(y_true, y_pred):
-            amp_true = K.expand_dims(y_true[:, :, :, 0], axis=-1)
-            phase_true = K.expand_dims(y_true[:, :, :, 1:], axis=-1)
+            amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(y_true, y_pred, vgg, config)
+            return amp_loss
 
-            amp_pred = K.expand_dims(y_pred[:, :, :, 0], axis=-1)
-            phase_pred = K.expand_dims(y_pred[:, :, :, 1:], axis=-1)
-
-            amp_loss = cls.__l1_l2_and_perceptual_loss_multiscale(amp_true, amp_pred, vgg, config)
-            phase_loss = cls.__l1_and_l2_loss(phase_true, phase_pred)
-
-            return 0.25 * amp_loss + 100 * 0.5 * phase_loss
         return custom_loss
 
     @classmethod
