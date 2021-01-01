@@ -777,7 +777,7 @@ def convert_paths_to_str():
 def count_genres():
     with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
-
+    print(np.unique(genre_ids))
     for i in np.unique(genre_ids):
         print(f'{i}: {np.count_nonzero(genre_ids == i)}')
 
@@ -815,6 +815,17 @@ def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
 
 # def download_solos_dataset():
 #    mirdata.medley_solos_db.download(data_home=SOLOS_DATASET_DIR, cleanup=True, force_overwrite=False)
+def count_genres_solos():
+    with open(f'train-genres.pkl', 'rb') as f2:
+        genre_ids = pickle.load(f2)
+    print(genre_ids)
+    print(np.unique(genre_ids))
+    for i in range(len(genre_ids)):
+        genre_ids[i] = int(genre_ids[i])
+    for i in np.unique(genre_ids):
+        print(f'{i}: {np.count_nonzero(genre_ids == i)}')
+
+
 
 
 if __name__ == '__main__':
@@ -831,9 +842,10 @@ if __name__ == '__main__':
     # download_solos_dataset()
     # reset_genres('s')
     # list_tracks_medley()
-    create_genres_only_solos()
+    # create_genres_only_solos()
     # create_spectrograms(include_phase=True, double_phase=True, width=128)
-    # count_genres()
+
+    count_genres_solos()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)
