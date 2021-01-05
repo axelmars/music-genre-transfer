@@ -1,10 +1,10 @@
 import numpy as np
 default_config = dict(
 
-	pose_std=1,
-	pose_decay=0.001,
-	# pose_std=0.01,
-	# pose_decay=0.00001,
+	# pose_std=1,
+	# pose_decay=0.001,
+	pose_std=0.1,
+	pose_decay=0.0001,
 	# pose_std=0,
 	# pose_decay=0,
 
