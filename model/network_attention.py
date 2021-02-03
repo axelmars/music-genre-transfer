@@ -393,7 +393,7 @@ class ConverterA:
 
         x = Dense(units=initial_height * initial_width * adain_dim)(x)
         x = LeakyReLU()(x)
-        #
+
         x = Reshape(target_shape=(initial_height, initial_width, adain_dim))(x)
 
         for i in range(n_adain_layers):
