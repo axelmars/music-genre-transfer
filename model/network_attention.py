@@ -389,9 +389,9 @@ class ConverterA:
         # # x = Dense(units=initial_height * initial_width * (adain_dim // 4))(x)
         # # x = LeakyReLU()(x)
         # x = GRU(units=initial_height * initial_width, return_sequences=True)(x)
+        x = Dense(units=initial_width * initial_width)(x)
         x = Permute(dims=(2, 1))(x)
 
-        x = Dense(units=adain_dim)(x)
         x = LeakyReLU()(x)
 
         x = Reshape(target_shape=(initial_height, initial_width, adain_dim))(x)
