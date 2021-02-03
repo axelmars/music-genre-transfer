@@ -382,14 +382,14 @@ class ConverterA:
         initial_width = img_shape[1] // (2 ** n_adain_layers)
 
         x = Attention(causal=True)([pose_code, pose_code])
-        x = GRU(units=initial_height * initial_width, return_sequences=True)(x)[:-adain_dim]
+        x = GRU(units=initial_height * initial_width, return_sequences=True)(x)
         # x = Dense(units=initial_height * initial_width * (adain_dim // 8))(pose_code)
         # x = LeakyReLU()(x)
         # x = GRU(units=initial_height * initial_width, return_sequences=True)(x)
         # # x = Dense(units=initial_height * initial_width * (adain_dim // 4))(x)
         # # x = LeakyReLU()(x)
         # x = GRU(units=initial_height * initial_width, return_sequences=True)(x)
-        x = Permute(dims=(2, 3, 1))(x)
+        x = Permute(dims=(2, 1))(x)
 
         x = Dense(units=initial_height * initial_width * adain_dim)(x)
         x = LeakyReLU()(x)
