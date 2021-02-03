@@ -391,7 +391,7 @@ class ConverterA:
         # x = GRU(units=initial_height * initial_width, return_sequences=True)(x)
         x = Permute(dims=(2, 1))(x)
 
-        x = Dense(units=initial_height * initial_width * adain_dim - 1)(x)
+        x = Dense(units=adain_dim)(x)
         x = LeakyReLU()(x)
 
         x = Reshape(target_shape=(initial_height, initial_width, adain_dim))(x)
