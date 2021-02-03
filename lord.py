@@ -8,6 +8,7 @@ import numpy as np
 import dataset
 from assets import AssetManager
 from model.network import Converter
+from model.network_attention import ConverterA
 from config import default_config
 
 
@@ -177,7 +178,10 @@ def train(args):
 	# poses = poses[idx]
 
 	if args.resume != -1:
-		converter = Converter.load(model_dir, include_encoders=False)
+		if args.attention:
+			converter = ConverterA.load(model_dir, include_encoders=False)
+		else:
+			converter = Converter.load(model_dir, include_encoders=False)
 
 		converter.resume_train(
 			imgs=imgs,
@@ -192,24 +196,44 @@ def train(args):
 		)
 
 	else:
-		converter = Converter.build(
-			img_shape=imgs.shape[1:],
-			n_imgs=imgs.shape[0],
-			n_identities=n_identities,
+		if args.attention:
+			converter = ConverterA.build(
+				img_shape=imgs.shape[1:],
+				n_imgs=imgs.shape[0],
+				n_identities=n_identities,
 
-			pose_dim=args.pose_dim,
-			identity_dim=args.identity_dim,
+				pose_dim=args.pose_dim,
+				identity_dim=args.identity_dim,
 
-			pose_std=default_config['pose_std'],
-			pose_decay=default_config['pose_decay'],
+				pose_std=default_config['pose_std'],
+				pose_decay=default_config['pose_decay'],
 
-			n_adain_layers=default_config['n_adain_layers'],
-			adain_dim=default_config['adain_dim'],
+				n_adain_layers=default_config['n_adain_layers'],
+				adain_dim=default_config['adain_dim'],
 
-			perceptual_loss_layers=default_config['perceptual_loss']['layers'],
-			perceptual_loss_weights=default_config['perceptual_loss']['weights'],
-			perceptual_loss_scales=default_config['perceptual_loss']['scales']
-		)
+				perceptual_loss_layers=default_config['perceptual_loss']['layers'],
+				perceptual_loss_weights=default_config['perceptual_loss']['weights'],
+				perceptual_loss_scales=default_config['perceptual_loss']['scales']
+			)
+		else:
+			converter = Converter.build(
+				img_shape=imgs.shape[1:],
+				n_imgs=imgs.shape[0],
+				n_identities=n_identities,
+
+				pose_dim=args.pose_dim,
+				identity_dim=args.identity_dim,
+
+				pose_std=default_config['pose_std'],
+				pose_decay=default_config['pose_decay'],
+
+				n_adain_layers=default_config['n_adain_layers'],
+				adain_dim=default_config['adain_dim'],
+
+				perceptual_loss_layers=default_config['perceptual_loss']['layers'],
+				perceptual_loss_weights=default_config['perceptual_loss']['weights'],
+				perceptual_loss_scales=default_config['perceptual_loss']['scales']
+			)
 
 		converter.train(
 			imgs=imgs,
@@ -234,7 +258,7 @@ def train_encoders(args):
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 	imgs = imgs.astype(np.float32) / 255.0
 
-	converter = Converter.load(model_dir, include_encoders=False)
+	converter = ConverterA.load(model_dir, include_encoders=False)
 
 	glo_backup_dir = os.path.join(model_dir, args.glo_dir)
 	if not os.path.exists(glo_backup_dir):
@@ -296,6 +320,7 @@ def main():
 	train_parser.add_argument('-id', '--identity-dim', type=int, required=True)
 	train_parser.add_argument('-g', '--gpus', type=int, default=1)
 	train_parser.add_argument('-ex', '--resume', type=int, default=-1)
+	train_parser.add_argument('-at', '--attention', type=int, default=0)
 	train_parser.set_defaults(func=train)
 
 	train_encoders_parser = action_parsers.add_parser('train-encoders')
