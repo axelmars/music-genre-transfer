@@ -3,8 +3,8 @@ default_config = dict(
 
 	# pose_std=1,
 	# pose_decay=0.001,
-	pose_std=0.4,
-	pose_decay=0.0004,
+	pose_std=0.6,
+	pose_decay=0.0006,
 	# pose_std=0,
 	# pose_decay=0,
 
