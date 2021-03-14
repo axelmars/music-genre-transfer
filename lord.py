@@ -70,7 +70,10 @@ def split_samples(args):
 	data = np.load(assets.get_preprocess_file_path(args.input_data_name))
 	imgs, identities, poses = data['imgs'], data['identities'], data['poses']
 	print(imgs.shape)
-	imgs = imgs[~np.all(imgs == 0, axis=(1, 2, 3))]
+	used_idx = ~np.all(imgs == 0, axis=(1, 2, 3))
+	imgs = imgs[used_idx]
+	identities = identities[used_idx]
+	poses = poses[used_idx]
 	print(imgs.shape)
 	n_identities = np.unique(identities).size
 
