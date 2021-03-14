@@ -14,11 +14,14 @@ import re
 from imageio import imwrite
 from pathlib import Path
 from pydub.exceptions import CouldntDecodeError
+from pydub.utils import make_chunks
+from pydub.silence import split_on_silence
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA, IncrementalPCA
 from hdbscan import HDBSCAN
 from sklearn.preprocessing import MultiLabelBinarizer
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 from keras.models import Model, load_model
@@ -47,6 +50,12 @@ OVERLAP_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\d
 MEDLEY_SPECS_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_solos\\solos_specs'
 WAV_OUTPUT_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_fma\\fma_medium_wav-{CLASS_1_ID}-{CLASS_2_ID}'
 SOLOS_DATASET_DIR = f'C:\\Users\\Avi\\Desktop\\Uni\\ResearchProjectLab\\dataset_solos\\solos'
+YTDL_WAV_DIR = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/dataset_ytdl/wavs'
+YTDL_WAV_WHOLE_DIR = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/dataset_ytdl/whole_wavs'
+YTDL_SPECS_OUTPUT_DIR = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/dataset_ytdl/specs'
+YTDL_ORIGIN_DIR = 'C:/Users/Avi/Desktop/Uni/ResearchProjectLab/dataset_ytdl/originals'
+YTDL_SPEC_PATHS_LIST = 'spec_paths-ytdl.pkl'
+YTDL_CLASSES = 'classes-ytdl.pkl'
 TRACKS_LIST = 'track_paths-solos.pkl'
 SORTS_LIST = 'sorts-solos.pkl'
 GENRES_LIST = 'genres-solos.pkl'
@@ -826,6 +835,115 @@ def count_genres_solos():
         print(f'{i}: {np.count_nonzero(genre_ids == i)}')
 
 
+def process_ytdl():
+    # for audio_file in Path(YTDL_ORIGIN_DIR).iterdir():
+    #     audio = AudioSegment.from_file(audio_file)
+    #
+    # with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
+    #     genre_ids = pickle.load(f2)
+    label_dict = {
+        'J.S. Bach Violin Sonatas and Partitas BWV  1001-1006 Menuhin 1973-1975-XkZvyA69wCo': 7,
+        'Paganini  - Complete music for solo violin CD2-4qcbDbDZGT8': 7,
+        'Paganini - Complete music for solo violin CD1-i2mTmi9tUag': 7,
+        'Piano Solo - Chopin, Debussy, Liszt, Mozart, Beethoven...-PJL_mVgT0Ao_1': 4,
+        'Piano Solo - Chopin, Debussy, Liszt, Mozart, Beethoven...-PJL_mVgT0Ao_2': 4,
+        'Westhoff - Suites for Solo Violin (Kolja Lessing)-34iZsGgufmg': 7
+    }
+    wav_file_paths = []
+    # AudioSegment.ffmpeg = os.getcwd() + "\\ffmpeg\\bin\\ffmpeg.exe"
+    AudioSegment.converter = r"C:\Users\Avi\anaconda3\envs\music-genre-transfer\Library\bin\ffmpeg.exe"
+    Path(YTDL_WAV_WHOLE_DIR).mkdir(parents=True, exist_ok=True)
+    Path(YTDL_WAV_DIR).mkdir(parents=True, exist_ok=True)
+    Path(YTDL_SPECS_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+
+    if Path(YTDL_SPEC_PATHS_LIST).exists():
+        with open(YTDL_SPEC_PATHS_LIST, 'rb') as f1:
+            spec_paths = pickle.load(f1)
+    else:
+        spec_paths = []
+    if Path(YTDL_CLASSES).exists():
+        with open(YTDL_CLASSES, 'rb') as f1:
+            class_labels = pickle.load(f1)
+    else:
+        class_labels = []
+    spec_paths = []
+    class_labels = []
+    max_db = 0
+    min_db = 0
+
+    for track_name in label_dict.keys():
+        print(f'processing {track_name}.m4a ...')
+        wav_file_path = Path(YTDL_WAV_WHOLE_DIR, track_name + '.wav')
+        if not wav_file_path.exists():
+            m4a_track = AudioSegment.from_file(Path(YTDL_ORIGIN_DIR, track_name + '.m4a'))
+            m4a_track.export(wav_file_path, format='wav')
+            del m4a_track
+        audio = AudioSegment.from_file(wav_file_path, 'wav')
+        chunks_by_silence = split_on_silence(
+            audio,
+            silence_thresh=-55,
+            min_silence_len=2000,
+            keep_silence=1000,
+            seek_step=1000
+        )
+        del audio
+        chunk_length_ms = 3000  # pydub calculates in millisec
+        print(len(chunks_by_silence))
+        for i, chunk_by_silence in tqdm(enumerate(chunks_by_silence), total=len(chunks_by_silence)):
+            # print('here')
+            print(f'length chunk by silence: {len(chunk_by_silence)}')
+            if len(chunk_by_silence) >= chunk_length_ms:
+                # print('there')
+                chunks = make_chunks(chunk_by_silence, chunk_length_ms)  # Make chunks of 3 secs
+                # Export all of the individual chunks as wav files
+                # print(chunks)
+                print(f'number of chunks: {len(chunks)}')
+
+                for j, chunk in enumerate(chunks):
+                    # print(chunk)
+                    chunk_name = f'{track_name}-{i}-{j}.wav'
+
+                    # print("exporting", chunk_name)
+                    chunk_path = Path(YTDL_WAV_DIR, chunk_name)
+                    chunk.export(chunk_path, format='wav')
+                    wav_file_paths.append(chunk_path)
+
+                    audio_data, sample_rate = librosa.load(chunk_path, sr=22050)
+                    mel_spectro = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
+                    S_dB = librosa.power_to_db(mel_spectro)
+                    max_db = np.max(S_dB) if np.max(S_dB) > max_db else max_db
+                    min_db = np.min(S_dB) if np.min(S_dB) < min_db else min_db
+
+                    partition = S_dB[:, :, None][:, :128]
+                    # print(partition.shape)
+                    im_save_path = os.path.join(YTDL_SPECS_OUTPUT_DIR, f'{track_name}-{i}-{j}.npy')
+                    with open(im_save_path, 'wb') as f:
+                        np.save(f, partition)  # imwrite(im_save_path, partition)
+                    class_labels.append(label_dict[track_name])
+                    spec_paths.append(im_save_path)
+            else:
+                print(f'found too short a chunk: {len(chunk_by_silence)}, at index {i}')
+
+            with open(YTDL_SPEC_PATHS_LIST, 'wb') as f1:
+                pickle.dump(spec_paths, f1)
+
+            with open(YTDL_CLASSES, 'wb') as f1:
+                pickle.dump(class_labels, f1)
+
+        del chunks
+
+    print('num spectrograms: ', len(spec_paths))
+    print(print('max: ', max_db, ' min: ', min_db))
+    for i in np.unique(class_labels):
+        print(f'{i}: {np.count_nonzero(class_labels == i)}')
+
+    # with open(YTDL_SPEC_PATHS_LIST, 'wb') as f1:
+    #     pickle.dump(spec_paths, f1)
+    #
+    # with open(YTDL_CLASSES, 'wb') as f1:
+    #     pickle.dump(class_labels, f1)
+
+
 
 
 if __name__ == '__main__':
@@ -844,8 +962,8 @@ if __name__ == '__main__':
     # list_tracks_medley()
     # create_genres_only_solos()
     # create_spectrograms(include_phase=True, double_phase=True, width=128)
-
-    count_genres_solos()
+    process_ytdl()
+    # count_genres_solos()
     # set_non_clustered_genres()
     # create_spectrograms(overlap=True, include_phase=True)
     # load_genre(CLASS_2_ID)

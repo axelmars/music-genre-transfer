@@ -384,18 +384,18 @@ class SimpleFMA(DataSet):
 		# with open(os.path.join(self._base_dir, f'bin/spec_paths-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as fd:
 		# 	spec_paths = pickle.load(fd)
 
-		with open(os.path.join(self._base_dir, f'bin/train-track-ids.pkl'), 'rb') as fd:
+		with open(os.path.join(self._base_dir, f'bin/spec_paths-ytdl.pkl'), 'rb') as fd:
 			spec_paths = pickle.load(fd)
 
 		img_paths = []
 
 		for spec_path in spec_paths:
-
-			# img_name = re.search(r'\d+\.npy', spec_path).group(0)
-			img_name = spec_path + '.npy'
+			# f'{track_name}-{i}-{j}.npy'
+			img_name = re.search(r'\w+-\d+-\d+\.npy', spec_path).group(0)
+			# img_name = spec_path + '.npy'
 
 			# img_path = os.path.join(self._base_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
-			img_path = os.path.join(self._base_dir, 'datasets', 'solos_specs_train', img_name)
+			img_path = os.path.join(self._base_dir, 'datasets', 'ytdl_specs', img_name)
 			# print(img_path)
 			img_paths.append(img_path)
 
@@ -408,7 +408,7 @@ class SimpleFMA(DataSet):
 		# with open(os.path.join(self._base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as f2:
 		# 	genre_ids = pickle.load(f2)
 
-		with open(os.path.join(self._base_dir, f'bin/train-genres.pkl'), 'rb') as f2:
+		with open(os.path.join(self._base_dir, f'bin/classes-ytdl.pkl'), 'rb') as f2:
 			genre_ids = pickle.load(f2)
 
 		assert len(img_paths) == len(genre_ids)
@@ -426,7 +426,7 @@ class SimpleFMA(DataSet):
 
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
 			# img = img.T[:, :, None]
-			imgs[i] = img[:, :, 0][:, :, None]
+			imgs[i] = img
 			identities[i] = genre_ids[i]
 
 		return imgs, identities, poses

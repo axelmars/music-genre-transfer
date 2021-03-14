@@ -1,6 +1,7 @@
 import argparse
 import os
-import gc
+# import gc
+import re
 
 import pickle
 import numpy as np
@@ -71,12 +72,17 @@ def split_samples(args):
 
 	n_identities = np.unique(identities).size
 
-	with open(os.path.join(args.base_dir, 'bin', 'spec_paths-17-12-128.pkl'), 'rb') as f1:
+	with open(os.path.join(args.base_dir, 'bin', 'spec_paths-ytdl.pkl'), 'rb') as f1:
 		spec_paths = np.array(pickle.load(f1))
 
 	print('spec_paths shape: ', spec_paths.shape)
 	# Assuming order is kept
-	spec_paths_ids = np.array([x[-12:-6] for x in spec_paths])
+	spec_paths_ids = []
+	for spec_path in spec_paths:
+		img_name = re.search(r'\w+-\d+-\d+\.npy', spec_path).group(0)
+		spec_paths_ids.append(img_name)
+
+	spec_paths_ids = np.array(spec_paths_ids)
 	spec_ids = np.unique(spec_paths_ids)
 	n_samples = spec_ids.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
@@ -120,8 +126,9 @@ def split_samples(args):
 			file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
 		)
 		del train_imgs
+
 	del imgs
-	imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 3), dtype=np.float32)
+	imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 1), dtype=np.float32)
 	print('created zeros')
 	for i in range(num_batches):
 		if i + 1 == num_batches:
