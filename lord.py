@@ -69,7 +69,9 @@ def split_samples(args):
 
 	data = np.load(assets.get_preprocess_file_path(args.input_data_name))
 	imgs, identities, poses = data['imgs'], data['identities'], data['poses']
-
+	print(imgs.shape)
+	imgs = imgs[~np.all(imgs == 0, axis=(1, 2, 3))]
+	print(imgs.shape)
 	n_identities = np.unique(identities).size
 
 	with open(os.path.join(args.base_dir, 'bin', 'spec_paths-ytdl.pkl'), 'rb') as f1:
