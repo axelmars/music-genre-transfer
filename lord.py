@@ -164,8 +164,8 @@ def train(args):
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 
 	# for identity in np.unique(identities):
-	# identities[identities == 17] = 0
-	# identities[identities == 12] = 1
+	identities[identities == 4] = 0
+	identities[identities == 7] = 1
 
 	print('================= ', np.count_nonzero(identities == 1))
 	print('max min amp before normalization: ', imgs[:, :, :, 0].max(), imgs[:, :, :, 0].min())
