@@ -392,7 +392,7 @@ class SimpleFMA(DataSet):
 		for spec_path in spec_paths:
 			# f'{track_name}-{i}-{j}.npy'
 			print(spec_path)
-			img_name = re.search(r'\\([\w\s\-.]+-\d+-\d+\.npy)', spec_path).group(1)
+			img_name = re.search(r'\\([\w\s\-.,()]+-\d+-\d+\.npy)', spec_path).group(1)
 			# img_name = spec_path + '.npy'
 
 			# img_path = os.path.join(self._base_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}', img_name)
