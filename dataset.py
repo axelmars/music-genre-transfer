@@ -391,7 +391,7 @@ class SimpleFMA(DataSet):
 
 		for spec_path in spec_paths:
 			# f'{track_name}-{i}-{j}.npy'
-			print(spec_path)
+			# print(spec_path)
 			img_name = re.search(r'\\([\w\s\-.,()]+-\d+-\d+\.npy)', spec_path).group(1)
 			# img_name = spec_path + '.npy'
 
