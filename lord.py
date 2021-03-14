@@ -99,7 +99,7 @@ def split_samples(args):
 	# train_idx = ~np.isin(np.arange(spec_paths_ids.shape[0]), test_idx)
 	print('train_idx shape: ', np.count_nonzero(train_idx))
 
-	print(spec_paths_ids[train_idx][:26])
+	# print(spec_paths_ids[train_idx][:26])
 	del spec_paths_ids
 
 	np.save(os.path.join(args.base_dir, 'bin', 'test_idx.npy'), test_idx)
