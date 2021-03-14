@@ -9,6 +9,7 @@ import imageio
 # import cv2
 import h5py
 import pickle
+from tqdm import tqdm
 
 from keras.datasets import mnist
 from scipy.ndimage.filters import gaussian_filter
@@ -421,7 +422,7 @@ class SimpleFMA(DataSet):
 		identities = np.empty(shape=(len(img_paths), ), dtype=np.uint32)
 		poses = np.zeros(shape=(len(img_paths), ), dtype=np.uint32)
 
-		for i in range(len(img_paths)):
+		for i in tqdm(range(len(img_paths)), total=len(img_paths)):
 			# img = imageio.imread(img_paths[i])
 			img = np.load(img_paths[i])
 
