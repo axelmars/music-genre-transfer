@@ -86,15 +86,17 @@ def split_samples(args):
 
 	spec_paths_ids = np.array(spec_paths_ids)
 	spec_ids = np.unique(spec_paths_ids)
-	n_samples = spec_ids.shape[0]
+	n_samples = imgs.shape[0]
 	n_test_samples = int(n_samples * args.test_split)
 
-	random_ids = np.random.choice(spec_ids, size=n_test_samples, replace=False)
+	random_ids = np.random.choice(np.arange(imgs.shape[0]), size=n_test_samples, replace=False)
 
-	test_idx = np.nonzero(spec_paths_ids == random_ids[:, None])[1]
+	test_idx = random_ids
+	train_idx = ~np.isin(np.arange(imgs.shape[0]), test_idx)
+	# test_idx = np.nonzero(spec_paths_ids == random_ids[:, None])[1]
 	print('test_idx shape: ', test_idx.shape)
 
-	train_idx = ~np.isin(np.arange(spec_paths_ids.shape[0]), test_idx)
+	# train_idx = ~np.isin(np.arange(spec_paths_ids.shape[0]), test_idx)
 	print('train_idx shape: ', np.count_nonzero(train_idx))
 
 	print(spec_paths_ids[train_idx][:26])
@@ -111,37 +113,37 @@ def split_samples(args):
 	)
 	print('saved test data')
 
-	print('deleted ids, poses')
-	num_batches = 4
-	train_idx_int = np.arange(train_idx.shape[0])[train_idx]
-	print(f'train_idx_int shape: {train_idx_int.shape}')
-	n_in_batch = int(train_idx_int.shape[0] / num_batches)
-	print(n_in_batch)
-	for i in range(num_batches):
-		if i + 1 == num_batches:
-			indices = train_idx_int[i * n_in_batch:]
-		else:
-			indices = train_idx_int[i * n_in_batch: (i + 1) * n_in_batch]
-		train_imgs = imgs[indices]
-		print(train_imgs.shape[0])
-		np.savez(
-			file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
-		)
-		del train_imgs
-
-	del imgs
-	imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 1), dtype=np.float32)
-	print('created zeros')
-	for i in range(num_batches):
-		if i + 1 == num_batches:
-			imgs_train[i * n_in_batch:] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
-		else:
-			imgs_train[i * n_in_batch: (i + 1) * n_in_batch] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
-
-	print('transferred variables')
+	# print('deleted ids, poses')
+	# num_batches = 4
+	# train_idx_int = np.arange(train_idx.shape[0])[train_idx]
+	# print(f'train_idx_int shape: {train_idx_int.shape}')
+	# n_in_batch = int(train_idx_int.shape[0] / num_batches)
+	# print(n_in_batch)
+	# for i in range(num_batches):
+	# 	if i + 1 == num_batches:
+	# 		indices = train_idx_int[i * n_in_batch:]
+	# 	else:
+	# 		indices = train_idx_int[i * n_in_batch: (i + 1) * n_in_batch]
+	# 	train_imgs = imgs[indices]
+	# 	print(train_imgs.shape[0])
+	# 	np.savez(
+	# 		file=assets.get_preprocess_file_path(str(i)), imgs=train_imgs
+	# 	)
+	# 	del train_imgs
+	#
+	# del imgs
+	# imgs_train = np.zeros((train_idx_int.shape[0], 128, 128, 1), dtype=np.float32)
+	# print('created zeros')
+	# for i in range(num_batches):
+	# 	if i + 1 == num_batches:
+	# 		imgs_train[i * n_in_batch:] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
+	# 	else:
+	# 		imgs_train[i * n_in_batch: (i + 1) * n_in_batch] = np.load(assets.get_preprocess_file_path(str(i)))['imgs']
+	#
+	# print('transferred variables')
 	np.savez(
 		file=assets.get_preprocess_file_path(args.train_data_name),
-		imgs=imgs_train, identities=identities[train_idx], poses=poses[train_idx], n_identities=n_identities
+		imgs=imgs[train_idx], identities=identities[train_idx], poses=poses[train_idx], n_identities=n_identities
 	)
 	print('saved train data')
 
