@@ -427,7 +427,11 @@ class SimpleFMA(DataSet):
 
 			# img = img.T[-128:, :, None]  # set timestep as first dimension, crop timestep to 128 before end.
 			# img = img.T[:, :, None]
-			imgs[i] = img
+			if img.shape[1] == 128:
+				imgs[i] = img
+			else:
+				print(f'{img_paths[i]} {img.shape}')
+				continue
 			identities[i] = genre_ids[i]
 
 		return imgs, identities, poses
