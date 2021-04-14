@@ -482,6 +482,41 @@ class Converter:
         return model
 
     @classmethod
+    def __build_irregularised_pose_encoder(cls, img_shape, pose_dim, pose_std, pose_decay):
+        img = Input(shape=img_shape)
+
+        x = Conv2D(filters=64, kernel_size=(7, 7), strides=(1, 1), padding='same')(img)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(filters=128, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(filters=256, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+        x = LeakyReLU()(x)
+
+        x = Flatten()(x)
+
+        for i in range(2):
+            x = Dense(units=256)(x)
+            x = LeakyReLU()(x)
+
+        pose_code = Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay))(x)
+        # pose_code = GaussianNoise(stddev=pose_std)(pose_code)
+
+        model = Model(inputs=img, outputs=pose_code, name='pose-encoder')
+
+        print('pose-encoder arch:')
+        model.summary()
+
+        return model
+
+    @classmethod
     def __build_identity_encoder(cls, img_shape, identity_dim):
         img = Input(shape=img_shape)
 

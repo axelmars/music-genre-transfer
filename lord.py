@@ -163,6 +163,7 @@ def train(args):
 	data = np.load(assets.get_preprocess_file_path(args.data_name))
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 
+	print(identities)
 	# for identity in np.unique(identities):
 	identities[identities == 4] = 0
 	identities[identities == 7] = 1
@@ -181,21 +182,18 @@ def train(args):
 	# shuffle the images
 	# idx = np.arange(imgs.shape[0])
 	# np.random.shuffle(idx)
-	rng = np.random.get_state()
-	np.random.shuffle(imgs)
-	np.random.set_state(rng)
-	np.random.shuffle(identities)
-	np.random.set_state(rng)
-	np.random.shuffle(poses)
+	# rng = np.random.get_state()
+	# np.random.shuffle(imgs)
+	# np.random.set_state(rng)
+	# np.random.shuffle(identities)
+	# np.random.set_state(rng)
+	# np.random.shuffle(poses)
 	# imgs = imgs[idx]
 	# identities = identities[idx]
 	# poses = poses[idx]
 
 	if args.resume != -1:
-		if args.attention:
-			converter = ConverterA.load(model_dir, include_encoders=False)
-		else:
-			converter = Converter.load(model_dir, include_encoders=False)
+		converter = Converter.load(model_dir, include_encoders=False)
 
 		converter.resume_train(
 			imgs=imgs,
@@ -210,44 +208,24 @@ def train(args):
 		)
 
 	else:
-		if args.attention:
-			converter = ConverterA.build(
-				img_shape=imgs.shape[1:],
-				n_imgs=imgs.shape[0],
-				n_identities=n_identities,
+		converter = Converter.build(
+			img_shape=imgs.shape[1:],
+			n_imgs=imgs.shape[0],
+			n_identities=n_identities,
 
-				pose_dim=args.pose_dim,
-				identity_dim=args.identity_dim,
+			pose_dim=args.pose_dim,
+			identity_dim=args.identity_dim,
 
-				pose_std=default_config['pose_std'],
-				pose_decay=default_config['pose_decay'],
+			pose_std=default_config['pose_std'],
+			pose_decay=default_config['pose_decay'],
 
-				n_adain_layers=default_config['n_adain_layers'],
-				adain_dim=default_config['adain_dim'],
+			n_adain_layers=default_config['n_adain_layers'],
+			adain_dim=default_config['adain_dim'],
 
-				perceptual_loss_layers=default_config['perceptual_loss']['layers'],
-				perceptual_loss_weights=default_config['perceptual_loss']['weights'],
-				perceptual_loss_scales=default_config['perceptual_loss']['scales']
-			)
-		else:
-			converter = Converter.build(
-				img_shape=imgs.shape[1:],
-				n_imgs=imgs.shape[0],
-				n_identities=n_identities,
-
-				pose_dim=args.pose_dim,
-				identity_dim=args.identity_dim,
-
-				pose_std=default_config['pose_std'],
-				pose_decay=default_config['pose_decay'],
-
-				n_adain_layers=default_config['n_adain_layers'],
-				adain_dim=default_config['adain_dim'],
-
-				perceptual_loss_layers=default_config['perceptual_loss']['layers'],
-				perceptual_loss_weights=default_config['perceptual_loss']['weights'],
-				perceptual_loss_scales=default_config['perceptual_loss']['scales']
-			)
+			perceptual_loss_layers=default_config['perceptual_loss']['layers'],
+			perceptual_loss_weights=default_config['perceptual_loss']['weights'],
+			perceptual_loss_scales=default_config['perceptual_loss']['scales']
+		)
 
 		converter.train(
 			imgs=imgs,
@@ -265,14 +243,20 @@ def train(args):
 
 def train_encoders(args):
 	assets = AssetManager(args.base_dir)
-	model_dir = assets.get_model_dir(args.model_name)
-	tensorboard_dir = assets.get_tensorboard_dir(args.model_name)
+	if args.resume != -1:
+		model_dir = assets.get_model_dir(args.model_name)
+		tensorboard_dir = assets.get_tensorboard_dir(args.model_name)
+	else:
+		model_dir = assets.recreate_model_dir(args.model_name)
+		tensorboard_dir = assets.recreate_tensorboard_dir(args.model_name)
 
 	data = np.load(assets.get_preprocess_file_path(args.data_name))
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
-	imgs = imgs.astype(np.float32) / 255.0
 
-	converter = ConverterA.load(model_dir, include_encoders=False)
+	identities[identities == 4] = 0
+	identities[identities == 7] = 1
+
+	converter = Converter.load(model_dir, include_encoders=False)
 
 	glo_backup_dir = os.path.join(model_dir, args.glo_dir)
 	if not os.path.exists(glo_backup_dir):
