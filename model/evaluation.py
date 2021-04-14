@@ -39,7 +39,7 @@ class EvaluationCallback(TensorBoard):
 		pose_codes = self.__pose_encoder.predict(imgs)
 		identity_codes = self.__identity_embedding.predict(identities)
 		identity_adain_params = self.__identity_modulation.predict(identity_codes)
-		paddings = [[0, 0], [0, 0], [0, 1]]
+		# paddings = [[0, 0], [0, 0], [0, 1]]
 		# channel_to_add = np.zeros(shape=(self.config.img_shape[0], self.config.img_shape[1], 1), dtype=np.float32)
 		# np.pad(t, pad_width=paddings, constant_values=0)
 		# blank = np.zeros_like(imgs[0][:, :, 0][:, :, None])

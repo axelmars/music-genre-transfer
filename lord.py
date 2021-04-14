@@ -260,24 +260,45 @@ def train_encoders(args):
 
 	identities[identities == 4] = 0
 	identities[identities == 7] = 1
+	correct_idx = (identities == 0) | (identities == 1)
+	identities = identities[correct_idx]
+	imgs = imgs[correct_idx]
 
-	converter = Converter.load(model_dir, include_encoders=False)
+	imgs[:, :, :, 0] = (imgs[:, :, :, 0] - default_config['min_level_db']) / (default_config['max_level_db'] - default_config['min_level_db'])
 
 	glo_backup_dir = os.path.join(model_dir, args.glo_dir)
-	if not os.path.exists(glo_backup_dir):
-		os.mkdir(glo_backup_dir)
-		converter.save(glo_backup_dir)
 
-	converter.train_identity_encoder(
-		imgs=imgs,
-		identities=identities,
+	if args.resume != -1:
+		converter = Converter.load(glo_backup_dir, include_encoders=True)
+		converter.resume_train_encoders(
+			imgs=imgs,
+			identities=identities,
+			batch_size=default_config['train']['batch_size'],
+			n_epochs=default_config['train']['n_epochs'],
 
-		batch_size=default_config['train_encoders']['batch_size'],
-		n_epochs=default_config['train_encoders']['n_epochs'],
+			model_dir=glo_backup_dir,
+			tensorboard_dir=tensorboard_dir,
+		)
 
-		model_dir=model_dir,
-		tensorboard_dir=tensorboard_dir
-	)
+	else:
+		if not os.path.exists(glo_backup_dir):
+			converter = Converter.load(model_dir, include_encoders=False)
+			os.mkdir(glo_backup_dir)
+			converter.save(glo_backup_dir)
+
+		else:
+			converter = Converter.load(glo_backup_dir, include_encoders=False)
+
+		converter.train_encoders(
+			imgs=imgs,
+			identities=identities,
+
+			batch_size=default_config['train_encoders']['batch_size'],
+			n_epochs=default_config['train_encoders']['n_epochs'],
+
+			model_dir=model_dir,
+			tensorboard_dir=tensorboard_dir
+		)
 
 	converter.save(model_dir)
 
