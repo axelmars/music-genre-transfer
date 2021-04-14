@@ -163,7 +163,7 @@ def train(args):
 	data = np.load(assets.get_preprocess_file_path(args.data_name))
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 
-	print(identities)
+	print(np.unique(identities))
 	# for identity in np.unique(identities):
 	identities[identities == 4] = 0
 	identities[identities == 7] = 1
