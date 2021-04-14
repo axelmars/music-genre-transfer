@@ -169,7 +169,7 @@ def train(args):
 	# for identity in np.unique(identities):
 	identities[identities == 4] = 0
 	identities[identities == 7] = 1
-	correct_idx = identities == 0 or identities == 1
+	correct_idx = (identities == 0) | (identities == 1)
 	identities = identities[correct_idx]
 	imgs = imgs[correct_idx]
 	print('================= ', np.count_nonzero(identities == 1))
