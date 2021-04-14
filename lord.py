@@ -172,6 +172,7 @@ def train(args):
 	correct_idx = (identities == 0) | (identities == 1)
 	identities = identities[correct_idx]
 	imgs = imgs[correct_idx]
+	print(identities.shape)
 	print('================= ', np.count_nonzero(identities == 1))
 	print('max min amp before normalization: ', imgs[:, :, :, 0].max(), imgs[:, :, :, 0].min())
 	# print('max min phase before normalization: ', imgs[:, :, :, 1:].max(), imgs[:, :, :, 1:].min())
