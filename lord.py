@@ -164,6 +164,8 @@ def train(args):
 	imgs, identities, poses, n_identities = data['imgs'], data['identities'], data['poses'], data['n_identities']
 
 	print(np.unique(identities))
+	print(np.shape(imgs))
+	print(np.shape(identities))
 	# for identity in np.unique(identities):
 	identities[identities == 4] = 0
 	identities[identities == 7] = 1
