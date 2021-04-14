@@ -169,6 +169,7 @@ def train(args):
 	# for identity in np.unique(identities):
 	identities[identities == 4] = 0
 	identities[identities == 7] = 1
+	print(np.count_nonzero(identities[identities == 4 | identities == 7]))
 
 	print('================= ', np.count_nonzero(identities == 1))
 	print('max min amp before normalization: ', imgs[:, :, :, 0].max(), imgs[:, :, :, 0].min())
