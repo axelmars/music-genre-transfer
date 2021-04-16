@@ -103,11 +103,11 @@ class Converter:
         if not include_encoders:
             return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, model, None, epoch)
 
-        irr_pose_encoder = model.layers[6]  # change to correct indices
-        identity_encoder = model.layers[7]
+        # irr_pose_encoder = model.layers[6]  # change to correct indices
+        identity_encoder = model.layers[6]
         # identity_encoder = load_model(os.path.join(model_dir, 'identity_encoder.h5py'))
 
-        return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, irr_pose_encoder, identity_encoder=identity_encoder)
+        return Converter(config, pose_encoder, identity_embedding, identity_modulation, generator, identity_encoder=identity_encoder, model=model, epoch=epoch)
 
     def save(self, model_dir, epoch):
         print('saving models...')
@@ -139,7 +139,7 @@ class Converter:
 
     def __init__(self, config,
                  pose_encoder, identity_embedding,
-                 identity_modulation, generator, irr_pose_encoder, model=None, opt=None, epoch=0,
+                 identity_modulation, generator, model=None, opt=None, epoch=0,
                  identity_encoder=None):
 
         self.config = config
@@ -149,7 +149,6 @@ class Converter:
         self.identity_modulation = identity_modulation
         self.generator = generator
         self.identity_encoder = identity_encoder
-        self.irr_pose_encoder = irr_pose_encoder
         self.model = model
         self.opt = opt
         self.epoch = epoch
@@ -244,18 +243,17 @@ class Converter:
             verbose=1
         )
 
-    def train_encoders(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
-        self.irr_pose_encoder = self.__build_irregularised_pose_encoder(self.config.img_shape, self.config.pose_dim)
+    def train_identity_encoder(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
         self.identity_encoder = self.__build_identity_encoder(self.config.img_shape, self.config.identity_dim)
 
         img = Input(shape=self.config.img_shape)
+        pose_code = Input(shape=(self.config.pose_dim,))
 
-        pose_code = self.irr_pose_encoder(img)
         identity_code = self.identity_encoder(img)
         identity_adain_params = self.identity_modulation(identity_code)
         generated_img = self.generator([pose_code, identity_adain_params])
 
-        self.model = Model(inputs=img, outputs=[generated_img, pose_code, identity_code])
+        self.model = Model(inputs=[img, pose_code], outputs=[generated_img, identity_code])
 
         self.opt = AdamLRM(
             lr_multiplier={
@@ -266,20 +264,21 @@ class Converter:
         )
         self.model.compile(
             optimizer=self.opt,
-            loss=[Converter.get_custom_loss(self.config), losses.mean_squared_error, losses.mean_squared_error]
+            loss=[Converter.get_custom_loss(self.config), losses.mean_squared_error],
+            loss_weights=[1, 1e4]
         )
 
         reduce_lr = ReduceLROnPlateau(monitor='loss', mode='min', min_delta=1, factor=0.5, patience=20, verbose=1)
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=1, patience=40, verbose=1)
 
         tensorboard = TrainEncodersEvaluationCallback(
-            imgs, self.irr_pose_encoder, self.identity_encoder, self.identity_modulation, self.generator, tensorboard_dir
+            imgs, self.pose_encoder, self.identity_encoder, self.identity_modulation, self.generator, tensorboard_dir
         )
 
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
         self.model.fit(
-            x=imgs, y=[imgs, self.pose_encoder.predict(np.arange(imgs.shape[0])), self.identity_embedding.predict(identities)],
+            x=[imgs, self.pose_encoder.predict(imgs)], y=[imgs, self.identity_embedding.predict(identities)],
             batch_size=batch_size, epochs=n_epochs,
             callbacks=[reduce_lr, early_stopping, checkpoint, tensorboard],
             verbose=1
@@ -298,17 +297,17 @@ class Converter:
         checkpoint = CustomModelCheckpoint(self, model_dir)
 
         tensorboard = TrainEncodersEvaluationCallback(
-            imgs, self.irr_pose_encoder, self.identity_encoder, self.identity_modulation, self.generator, tensorboard_dir
+            imgs, self.pose_encoder, self.identity_encoder, self.identity_modulation, self.generator, tensorboard_dir
         )
 
         self.model.fit(
-            x=imgs, y=[imgs, self.pose_encoder.predict(np.arange(imgs.shape[0])), self.identity_embedding.predict(identities)],
+            x=[imgs, self.pose_encoder.predict(imgs)], y=[imgs, self.identity_embedding.predict(identities)],
             batch_size=batch_size, epochs=n_epochs,
             callbacks=[reduce_lr, early_stopping, checkpoint, tensorboard],
             verbose=1
         )
 
-    def train_identity_encoder(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
+    def train_identity_encoder_old(self, imgs, identities, batch_size, n_epochs, model_dir, tensorboard_dir):
         self.identity_encoder = self.__build_identity_encoder(self.config.img_shape, self.config.identity_dim)
 
         img = Input(shape=self.config.img_shape)
@@ -330,7 +329,7 @@ class Converter:
         early_stopping = EarlyStopping(monitor='loss', mode='min', min_delta=1, patience=40, verbose=1)
 
         tensorboard = TrainEncodersEvaluationCallback(
-            imgs, self.irr_pose_encoder, self.identity_encoder, self.identity_modulation, self.generator, tensorboard_dir
+            imgs, self.pose_encoder, self.identity_encoder, self.identity_modulation, self.generator, tensorboard_dir
         )
 
         checkpoint = CustomModelCheckpoint(self, model_dir)
@@ -576,7 +575,7 @@ class Converter:
         pose_code = Dense(units=pose_dim)(x)
         # pose_code = GaussianNoise(stddev=pose_std)(pose_code)
 
-        model = Model(inputs=img, outputs=pose_code, name='pose-encoder')
+        model = Model(inputs=img, outputs=pose_code, name='irr-pose-encoder')
 
         print('pose-encoder arch:')
         model.summary()

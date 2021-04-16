@@ -289,7 +289,7 @@ def train_encoders(args):
 		else:
 			converter = Converter.load(glo_backup_dir, include_encoders=False)
 
-		converter.train_encoders(
+		converter.train_identity_encoder(
 			imgs=imgs,
 			identities=identities,
 
