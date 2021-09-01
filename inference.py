@@ -37,6 +37,11 @@ class Inferer:
         # self.__converter.pose_encoder.compile()
 
     def infer(self, identity=True):
+        """
+        Infers from the model, generating novel samples.
+        :param identity: Should the identity transform also be applied.
+        :return:
+        """
         with open(os.path.join(self.__base_dir, f'bin/genre_ids-{CLASS_1_ID}-{CLASS_2_ID}-128.pkl'), 'rb') as f2:
             genre_ids = pickle.load(f2)
 
@@ -70,6 +75,14 @@ class Inferer:
         self._transform(sample_paths_1, CLASS_2_SUB, sample_paths_0, CLASS_1_SUB)
 
     def _transform(self, sample_paths, original_genre, dest_sample_paths=None, destination_genre=None):
+        """
+        Transforms the spectrograms given in sample paths using the model. Both identity transform and class transform are applied.
+        :param sample_paths:
+        :param original_genre:
+        :param dest_sample_paths:
+        :param destination_genre:
+        :return:
+        """
         for i, sample_path in enumerate(sample_paths):
             print(f'current path: {sample_path}')
             if not self.__overlap:
@@ -124,6 +137,11 @@ class Inferer:
                 self.convert_spec_to_audio(full_spec, img_name[:-5] + '-' + str(original_genre), genre_transform=False)
 
     def _concatenate_overlap(self, imgs):
+        """
+        concatenates overlapping spectrograms into a single large spectrogram using a mask.
+        :param imgs:
+        :return:
+        """
         mask = binomial_mask()
         first_in_pair = np.concatenate((imgs[0], np.zeros((128, 96, 3))), axis=1)
         second_in_pair = np.concatenate((np.zeros((128, 96, 3)), imgs[1]), axis=1)
@@ -142,6 +160,11 @@ class Inferer:
         return full_spec
 
     def _combine_specs_to_orig(self, sample_path):
+        """
+        Combines spectrograms (not overlapping) into a single large spectrogram.
+        :param sample_path:
+        :return:
+        """
         img_name = re.search(r'\d+\.npy', sample_path).group(0)
         img_path = os.path.join(self.__dataset_dir, 'datasets', 'fma_medium_specs_imgs', img_name)
         full_img = []
@@ -156,6 +179,11 @@ class Inferer:
         return np.array(full_img), img_name
 
     def _combine_overlapping_specs(self, sample_path):
+        """
+        Combines overlapping spectrograms into a single large spectrogram using a mask.
+        :param sample_path:
+        :return:
+        """
         img_name = re.search(r'\d+\.npy', sample_path).group(0)
         img_path = os.path.join(self.__dataset_dir, 'datasets', f'fma_medium_specs_overlap-{CLASS_1_ID}-{CLASS_2_ID}-ol', img_name)
         full_img = []
@@ -179,6 +207,7 @@ class Inferer:
         return np.array(full_img), img_name
 
     def convert_spec_to_audio(self, spec, i, j=None, genre_transform=False):
+        """Converts spectrogram to wave form."""
         amp = (41 - (-100)) * spec[:, :, 1] + (-100)
         phase = (0.302 - (-0.303)) * spec[:, :, 2] + (-0.303)
 
@@ -204,6 +233,9 @@ class Inferer:
 
 
 def binomial_mask(a=1, x=1, im_shape=(128, 128, 3)):
+    """
+    Calculates a binomial mask for the overlapping regions of concatenated consecutive spectrograms.
+    """
     n = int(.25 * im_shape[1]) - 1
     term = pow(a, n)
     # print(term, end=" ")

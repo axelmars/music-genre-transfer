@@ -538,7 +538,7 @@ class Converter:
             x = LeakyReLU()(x)
 
         pose_code = Dense(units=pose_dim, activity_regularizer=regularizers.l2(pose_decay))(x)
-        pose_code = GaussianNoise(stddev=pose_std)(pose_code)
+        pose_code = GaussianNoise(stddev=pose_std)(inputs=pose_code, training=)
 
         model = Model(inputs=img, outputs=pose_code, name='pose-encoder')
 

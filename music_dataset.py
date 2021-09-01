@@ -76,29 +76,11 @@ def safe_parse(x):
 # get set of genres
 # get track id's for all songs conforming to the set of genres.
 
-# Print iterations progress
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
-
 def get_tracks_ids():
+    """
+    Generates genre labels for FMA.
+    :return:
+    """
     # genres_data = pd.read_csv('music_metadata/genres.csv')
     tracks_data = pd.read_csv('music_metadata/tracks.csv').iloc[2:][[TRACK_ID_COL_NAME, ALL_GENRES_COL_NAME, GENRES_COL_NAME]]
     # genres_data = pd.read_csv('music_metadata/genres.csv')
@@ -131,6 +113,10 @@ def get_tracks_ids():
 
 
 def list_tracks():
+    """
+    Generates the track paths and labels for the fma dataset.
+    :return:
+    """
     track_paths = []
     genre_ids = []
     tracks_data = pd.read_csv(TRACKS_METADATA_FMA).iloc[2:][[TRACK_ID_COL_NAME, GENRES_COL_NAME]]
@@ -181,6 +167,10 @@ def list_tracks():
 
 
 def list_tracks_medley():
+    """
+    Generates the labels and the track names for the medley-solos-db.
+    :return:
+    """
     track_paths = []
     genre_ids = []
     base_dir = Path(MP3_PATH_SOLOS)  # '\\' + track_id[:3] + '\\' + track_id + '.mp3'
@@ -222,7 +212,7 @@ def list_tracks_medley():
 
 def create_spectrograms_medley(include_phase=True, double_phase=True, width=128):
     """
-    loads tracks according to given ids and saves their spectrograms.
+    loads tracks according to given ids and saves their spectrograms. medley-solos-db dataset.
     :param tracks_ids:
     :return:
     """
@@ -480,6 +470,10 @@ def load_genre(genre_id):
 
 
 def get_pc_eigenvalues():
+    """
+    Prints the variance ratios of the different dimensions according to pca.
+    :return:
+    """
     with open('features-for-clustering.pkl', 'rb') as f0:
         X = np.array(pickle.load(f0))
 
@@ -496,6 +490,10 @@ def get_pc_eigenvalues():
 
 
 def convert_mp3_to_wav():
+    """
+    Converts mp3 samples to waveform.
+    :return:
+    """
     # track_paths, genre_ids, track_ids = list_tracks()
     with open(f'track_paths-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f1:
         track_paths = pickle.load(f1)
@@ -534,12 +532,24 @@ def reset_genres(suffix='c'):
 
 
 def clustering_processing(batch, pca, kmeans):
+    """
+    Reduces dimensions for and applies the clustering.
+    :param batch:
+    :param pca:
+    :param kmeans:
+    :return:
+    """
     reduced_batch = pca.fit_transform(np.array(batch, dtype=np.float32))
     print('num pca components:', pca.n_components_, 'pca explained_variance_ratio:', pca.explained_variance_ratio_)
     kmeans.partial_fit(np.array(reduced_batch, dtype=np.float32))
 
 
 def create_clustered_subgenres(vgg_features=True):
+    """
+    Applies clustering to subgenres, minimising intra-class variation.
+    :param vgg_features:
+    :return:
+    """
     track_paths, genre_ids, track_ids = list_tracks()
     if vgg_features:
         vgg = vgg16.VGG16(include_top=False, input_shape=(128, 128, 3))
@@ -647,6 +657,10 @@ def create_clustered_subgenres(vgg_features=True):
 
 
 def visualise_reduction():
+    """
+    Visualises the samples split into genres after dimensionality reduction.
+    :return:
+    """
     with open('features-for-clustering.pkl', 'rb') as f0:
         features = np.array(pickle.load(f0))
 
@@ -663,6 +677,10 @@ def visualise_reduction():
 
 
 def cluster():
+    """
+    Applies clustering using KMeans.
+    :return:
+    """
     with open('features-for-clustering.pkl', 'rb') as f0:
         features = np.array(pickle.load(f0))
 
@@ -699,6 +717,10 @@ def cluster():
 
 
 def finetune_clustering():
+    """
+    Applies clustering using TSNE for dimensionality reduction and HDBSCAN for clustering.
+    :return:
+    """
     with open('features-for-clustering.pkl', 'rb') as f0:
         features = np.array(pickle.load(f0))
     n_iter = 50
@@ -728,6 +750,8 @@ def finetune_clustering():
 
 
 def clustering_analysis():
+    """Counts the number of samples in each cluster
+    """
     with open(f'genre_ids-{CLASS_1_ID}-{CLASS_2_ID}.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
 
@@ -792,6 +816,15 @@ def count_genres():
 
 
 def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
+    """
+    Create a melspectrogram from the given signal
+    :param S: the signal
+    :param sr:
+    :param n_filters:
+    :param n_fft:
+    :param is_angle: does the spectrogram include phase information.
+    :return:
+    """
     # low_freq_mel = 0
     # high_freq_mel = (2595 * np.log10(1 + (sr / 2) / 700))  # Convert Hz to Mel
     # mel_points = np.linspace(low_freq_mel, high_freq_mel, n_filters + 2)  # Equally spaced in Mel scale
@@ -817,13 +850,8 @@ def melspectrogram(S, sr=22050, n_filters=128, n_fft=2048, is_angle=False):
     else:
         filter_banks = np.dot(fbank, S)
     return filter_banks
-    # filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)  # Numerical Stability
-
-    # filter_banks = 20 * np.log10(filter_banks)  # dB
 
 
-# def download_solos_dataset():
-#    mirdata.medley_solos_db.download(data_home=SOLOS_DATASET_DIR, cleanup=True, force_overwrite=False)
 def count_genres_solos():
     with open(f'train-genres.pkl', 'rb') as f2:
         genre_ids = pickle.load(f2)
@@ -836,6 +864,9 @@ def count_genres_solos():
 
 
 def process_ytdl():
+    """
+    Process the youtube downloaded dataset, splitting the given large wave forms on silences and transforming to small spectrograms.
+    """
     # for audio_file in Path(YTDL_ORIGIN_DIR).iterdir():
     #     audio = AudioSegment.from_file(audio_file)
     #
