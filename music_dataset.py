@@ -964,7 +964,7 @@ def process_ytdl():
         del chunks
 
     print('num spectrograms: ', len(spec_paths))
-    print(print('max: ', max_db, ' min: ', min_db))
+    print(print('max: ', max_db, ' min: ', min_db)) #
     for i in np.unique(class_labels):
         print(f'{i}: {np.count_nonzero(class_labels == i)}')
 
